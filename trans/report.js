@@ -1,64 +1,8 @@
-const API="https://n8n.yasergrid.online/webhook/student-transfer-1448-trans-v1";
-const key=sessionStorage.getItem("transKey")||"";
-const staff=sessionStorage.getItem("transStaff")||"";
-
-const $=id=>document.getElementById(id);
-const esc=v=>String(v??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;");
-
-function formatDate(){
-  return new Intl.DateTimeFormat("ar-SA",{dateStyle:"long",timeStyle:"short",timeZone:"Asia/Riyadh"}).format(new Date());
-}
-async function load(){
-  $("reportDate").textContent="التاريخ: "+formatDate();
-  $("preparedBy").textContent=staff||"________________";
-  if(!key){
-    $("reportMessage").innerHTML='لا توجد جلسة دخول فعالة. <a href="index.html">افتح صفحة trans وسجل الدخول أولًا.</a>';
-    return;
-  }
-  try{
-    const res=await fetch(API,{method:"POST",headers:{"Content-Type":"application/json","X-Trans-Key":key},body:JSON.stringify({action:"dashboard"})});
-    const data=await res.json();
-    if(!res.ok||!data.success) throw new Error(data.message||"تعذر إعداد التقرير.");
-    render(data);
-  }catch(err){
-    $("reportMessage").textContent=err.message;
-  }
-}
-function render(data){
-  const totalStudents=Object.values(data.grades||{}).reduce((s,g)=>s+(g.total||0),0);
-  const totalRequests=(data.requests||[]).length;
-  const s=data.summary||{};
-  $("summaryCards").innerHTML=[
-    ["إجمالي الطلاب",totalStudents],
-    ["إجمالي الطلبات",totalRequests],
-    ["قيد المراجعة",s.pending||0],
-    ["المقبولة",s.approved||0]
-  ].map(([l,v])=>`<div class="summary-card"><span>${l}</span><strong>${v}</strong></div>`).join("");
-
-  $("gradeTables").innerHTML=Object.entries(data.grades||{}).map(([grade,g])=>`
-    <div class="grade-block">
-      <h3>${esc(grade)} — الإجمالي: ${g.total||0} طالب</h3>
-      <div class="class-grid">
-        ${Object.entries(g.classes||{}).map(([c,n])=>`<div class="class-box"><span>الفصل ${esc(c)}</span><strong>${n}</strong></div>`).join("")}
-      </div>
-    </div>`).join("");
-
-  const rows=[...(data.requests||[])].sort((a,b)=>String(b.date||"").localeCompare(String(a.date||"")));
-  $("requestsBody").innerHTML=rows.length?rows.map((r,i)=>`
-    <tr>
-      <td>${i+1}</td>
-      <td>${esc(r.requestId)}</td>
-      <td>${esc(r.name)}</td>
-      <td>${esc(r.grade)}</td>
-      <td>${esc(r.fromClass)}</td>
-      <td>${esc(r.toClass)}</td>
-      <td>${esc(r.reason)}</td>
-      <td>${esc(r.balanceLabel)}</td>
-      <td>${esc(r.status)}</td>
-    </tr>`).join(""):`<tr><td colspan="9">لا توجد طلبات نقل مسجلة.</td></tr>`;
-
-  $("reportMessage").hidden=true;
-  $("reportContent").hidden=false;
-}
-$("printBtn").addEventListener("click",()=>window.print());
-load();
+topbar('report');const SESSION=requireSession();let DATA=null;if(SESSION){q('#preparedBy').textContent=SESSION.staff;q('#signPrepared').textContent=SESSION.staff;loadReport()}
+q('#refreshReport').onclick=loadReport;
+async function loadReport(){setStatus(q('#reportStatus'),'جاري إعداد التقرير...','info');try{DATA=await transApi({action:'dashboard'});renderReport();setStatus(q('#reportStatus'),'تم تحديث التقرير من البيانات الحالية.','ok')}catch(e){setStatus(q('#reportStatus'),e.message,'error')}}
+function renderReport(){const s=DATA.summary||{};q('#generatedAt').textContent=DATA.generatedAt||new Date().toLocaleString('ar-SA');q('#reportKpis').innerHTML=[['إجمالي الطلاب',s.totalStudents],['طلبات النقل',s.totalRequests],['قيد المراجعة',s.pending],['مقبول',s.approved],['مرفوض',s.rejected]].map(x=>`<div class="kpi"><span>${x[0]}</span><strong>${arNum(x[1])}</strong></div>`).join('');
+ q('#classesReport').innerHTML=Object.entries(DATA.classManagement||{}).map(([grade,g])=>`<div class="card"><div class="card-head"><div><h3>${escapeHtml(grade)}</h3><p>إجمالي ${arNum(g.total)} طالب · ${arNum(g.availableClasses)} فصول متاحة للنقل</p></div></div><div class="table-wrap"><table class="data-table" style="min-width:650px"><thead><tr><th>الفصل</th><th>الحالي</th><th>المقترح</th><th>المستهدف</th><th>الاحتياج/الفائض</th><th>النقل</th><th>الموازنة</th><th>ملاحظة</th></tr></thead><tbody>${Object.values(g.classes).sort((a,b)=>a.classNo-b.classNo).map(c=>`<tr><td>${c.classNo}</td><td>${arNum(c.count)}</td><td>${arNum(c.recommendedTarget)}</td><td>${arNum(c.target)}</td><td>${c.delta>0?`يحتاج ${arNum(c.delta)}`:c.delta<0?`فائض ${arNum(Math.abs(c.delta))}`:'متوازن'}</td><td>${c.available?'متاح':'مغلق'}</td><td>${c.excluded?'مستبعد':'داخل'}</td><td>${escapeHtml(c.note||'')}</td></tr>`).join('')}</tbody></table></div></div>`).join('');
+ renderPlan();q('#reportRequests').innerHTML=(DATA.requests||[]).length?DATA.requests.map(r=>`<tr><td>${escapeHtml(r.requestId)}</td><td>${escapeHtml(r.name)}<br><small>${escapeHtml(r.studentId)}</small></td><td>${escapeHtml(r.grade)}</td><td>${escapeHtml(r.fromClass)} ← ${escapeHtml(r.toClass)}</td><td>${escapeHtml(r.reason)}</td><td>${escapeHtml(r.balanceLabel)}</td><td>${escapeHtml(r.status)}</td><td>${escapeHtml(r.decisionDate||'—')}</td><td>${escapeHtml(r.approvedBy||'—')}</td></tr>`).join(''):'<tr><td colspan="9">لا توجد طلبات مسجلة.</td></tr>'}
+function renderPlan(){const all=[];for(const [grade,g] of Object.entries(DATA.classManagement||{})){let donors=Object.values(g.classes).filter(c=>!c.excluded&&c.count>c.target).map(c=>({c:c.classNo,n:c.count-c.target})),needs=Object.values(g.classes).filter(c=>!c.excluded&&c.available&&c.count<c.target).map(c=>({c:c.classNo,n:c.target-c.count}));let i=0,j=0;while(i<donors.length&&j<needs.length){const n=Math.min(donors[i].n,needs[j].n);if(n>0)all.push({grade,from:donors[i].c,to:needs[j].c,n});donors[i].n-=n;needs[j].n-=n;if(!donors[i].n)i++;if(!needs[j].n)j++}}q('#balancePlan').innerHTML=all.length?all.map(x=>`<div class="plan-item"><b>${escapeHtml(x.grade)}</b> · نقل ${arNum(x.n)} طالب تقريبًا من الفصل <b>${x.from}</b> إلى الفصل <b>${x.to}</b></div>`).join(''):'<div class="plan-item">الأعداد الحالية متوافقة مع الأهداف المحددة، أو لا توجد حركة ممكنة ضمن الفصول المتاحة.</div>'}
+q('#csvBtn').onclick=()=>{if(!DATA)return;const rows=[['رقم الطلب','رقم الطالب','اسم الطالب','الصف','الفصل الحالي','الفصل المطلوب','السبب','الحالة','تقييم الموازنة','ملاحظة الإدارة','تاريخ القرار','اعتمد بواسطة'],...(DATA.requests||[]).map(r=>[r.requestId,r.studentId,r.name,r.grade,r.fromClass,r.toClass,r.reason,r.status,r.balanceLabel,r.managementNote,r.decisionDate,r.approvedBy])];const csv='\ufeff'+rows.map(row=>row.map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(',')).join('\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download='student-transfer-report.csv';a.click();URL.revokeObjectURL(a.href)};

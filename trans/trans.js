@@ -1,103 +1,41 @@
-const API = "https://n8n.yasergrid.online/webhook/student-transfer-1448-trans-v1";
-const state = { data:null, grade:null, filter:"قيد المراجعة", selected:null, key:"", staffName:"" };
-const $ = id => document.getElementById(id);
-
-function show(el,msg,type="info"){el.textContent=msg;el.className=`status ${type}`;el.hidden=false}
-function hide(el){el.hidden=true}
-function esc(v){return String(v??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;")}
-async function api(payload){
-  const res=await fetch(API,{method:"POST",headers:{"Content-Type":"application/json","X-Trans-Key":state.key},body:JSON.stringify(payload)});
-  const data=await res.json().catch(()=>({}));
-  if(res.status===401){sessionStorage.removeItem("transKey");$("loginLayer").classList.remove("hidden");throw new Error("مفتاح الوصول غير صحيح.")}
-  if(!res.ok) throw new Error(data.message||"تعذر تنفيذ العملية.");
-  return data;
+topbar('dashboard');
+let DATA=null,activeGrade=null,currentRequest=null;
+const loginLayer=q('#loginLayer');
+const cached=getSession();if(cached.key&&cached.staff){q('#loginKey').value=cached.key;q('#loginStaff').value=cached.staff;tryLogin(cached.key,cached.staff)}
+q('#loginForm').onsubmit=e=>{e.preventDefault();tryLogin(q('#loginKey').value.trim(),q('#loginStaff').value.trim())};
+async function tryLogin(key,staff){
+ if(!key||!staff){setStatus(q('#loginStatus'),'أدخل مفتاح الوصول واسم الموظف.','error');return}
+ setStatus(q('#loginStatus'),'جاري التحقق...','info');
+ try{const d=await transApi({action:'dashboard'},key);setSession(key,staff);DATA=d;loginLayer.classList.add('hidden');render();setStatus(q('#loginStatus'),'','info')}
+ catch(e){setStatus(q('#loginStatus'),e.message,'error')}
 }
-function setBtn(btn,loading,text){if(!btn.dataset.o)btn.dataset.o=btn.textContent.trim();btn.disabled=loading;btn.textContent=loading?text:btn.dataset.o}
-
-$("loginForm").addEventListener("submit",async e=>{
-  e.preventDefault(); state.key=$("transKey").value.trim(); state.staffName=$("staffName").value.trim();
-  const btn=e.currentTarget.querySelector('button[type="submit"]'); setBtn(btn,true,"جاري الدخول...");
-  try{const d=await api({action:"dashboard"});sessionStorage.setItem("transKey",state.key);sessionStorage.setItem("transStaff",state.staffName);$("loginLayer").classList.add("hidden");state.data=d;renderAll();}
-  catch(err){show($("loginStatus"),err.message,"error")}finally{setBtn(btn,false)}
-});
-$("logoutBtn").addEventListener("click",()=>{sessionStorage.clear();location.reload()});
-$("refreshBtn").addEventListener("click",()=>loadDashboard());
-document.querySelectorAll(".filter-btn").forEach(b=>b.addEventListener("click",()=>{document.querySelectorAll(".filter-btn").forEach(x=>x.classList.remove("is-active"));b.classList.add("is-active");state.filter=b.dataset.filter;renderRequests()}));
-$("searchRequests").addEventListener("input",renderRequests);
-
-async function loadDashboard(){
-  try{const d=await api({action:"dashboard"});state.data=d;renderAll()}catch(err){alert(err.message)}
+q('#refreshBtn').onclick=load;
+async function load(){setStatus(q('#pageStatus'),'جاري تحديث البيانات...','info');try{DATA=await transApi({action:'dashboard'});render();setStatus(q('#pageStatus'),`تم التحديث: ${DATA.generatedAt||''}`,'ok')}catch(e){setStatus(q('#pageStatus'),e.message,'error')}}
+function render(){
+ if(!DATA)return;const s=DATA.summary||{};
+ q('#kpis').innerHTML=[['إجمالي الطلاب',s.totalStudents],['الطلبات',s.totalRequests],['قيد المراجعة',s.pending],['مقبول',s.approved],['مرفوض',s.rejected]].map(x=>`<div class="kpi"><span>${x[0]}</span><strong>${arNum(x[1])}</strong></div>`).join('');
+ const grades=Object.keys(DATA.classManagement||{});activeGrade=grades.includes(activeGrade)?activeGrade:grades[0];
+ q('#gradeTabs').innerHTML=grades.map(g=>`<button class="grade-tab ${g===activeGrade?'active':''}" data-g="${escapeHtml(g)}">${escapeHtml(g)}</button>`).join('');
+ qa('.grade-tab').forEach(b=>b.onclick=()=>{activeGrade=b.dataset.g;renderClasses();qa('.grade-tab').forEach(x=>x.classList.toggle('active',x===b))});
+ renderClasses();renderRequests();
 }
-function renderAll(){
-  if(!state.data?.success)return;
-  renderSummary(); renderGradeTabs(); renderBalance(); renderRequests();
+function renderClasses(){
+ const g=DATA.classManagement?.[activeGrade];if(!g)return;
+ q('#classRow').innerHTML=Object.values(g.classes).sort((a,b)=>a.classNo-b.classNo).map(c=>{
+  const delta=Number(c.delta);return `<div class="class-mini ${!c.available?'closed':''} ${delta>0?'need':delta<0?'extra':''}"><span>الفصل ${c.classNo}</span><strong>${arNum(c.count)}</strong><small>${c.excluded?'مستبعد من الموازنة':delta>0?`يحتاج ${arNum(delta)}`:delta<0?`فائض ${arNum(Math.abs(delta))}`:'متوازن'}</small></div>`
+ }).join('');
 }
-function renderSummary(){
-  const s=state.data.summary||{};
-  $("summaryGrid").innerHTML=[
-    ["قيد المراجعة",s.pending||0],["مقبول",s.approved||0],["مرفوض",s.rejected||0]
-  ].map(x=>`<div class="summary-card"><span>${x[0]}</span><strong>${x[1]}</strong></div>`).join("");
-}
-function renderGradeTabs(){
-  const grades=Object.keys(state.data.grades||{});
-  if(!state.grade||!grades.includes(state.grade))state.grade=grades[0]||null;
-  $("gradeTabs").innerHTML=grades.map(g=>`<button class="grade-tab ${g===state.grade?"is-active":""}" data-grade="${esc(g)}">${esc(g)}</button>`).join("");
-  $("gradeTabs").querySelectorAll(".grade-tab").forEach(b=>b.addEventListener("click",()=>{state.grade=b.dataset.grade;renderGradeTabs();renderBalance()}));
-}
-function renderBalance(){
-  const g=state.data.grades?.[state.grade]; if(!g) return $("classBalance").innerHTML="";
-  const counts=Object.values(g.classes); const avg=counts.length?counts.reduce((a,b)=>a+b,0)/counts.length:0;
-  $("classBalance").innerHTML=Object.entries(g.classes).map(([c,n])=>{
-    const diff=n-avg; const tone=diff>=2?"high":diff<=-2?"low":"balanced";
-    const label=diff>=2?"مرتفع":diff<=-2?"متاح":"متوازن";
-    return `<div class="class-card ${tone}"><div class="class-no"><span>الفصل ${c}</span><span>${label}</span></div><strong>${n}</strong><small>طالب</small></div>`;
-  }).join("");
-}
+q('#statusFilter').onchange=renderRequests;q('#requestSearch').oninput=renderRequests;
 function renderRequests(){
-  if(!state.data)return;
-  const q=$("searchRequests").value.trim().toLowerCase();
-  let arr=[...(state.data.requests||[])];
-  if(state.filter!=="الكل")arr=arr.filter(r=>r.status===state.filter);
-  if(q)arr=arr.filter(r=>`${r.name} ${r.requestId} ${r.studentId}`.toLowerCase().includes(q));
-  if(state.filter==="قيد المراجعة")arr.sort((a,b)=>(b.balanceScore||0)-(a.balanceScore||0));
-  $("emptyRequests").hidden=arr.length>0;
-  $("requestsList").innerHTML=arr.map(requestCard).join("");
-  $("requestsList").querySelectorAll("[data-open-request]").forEach(b=>b.addEventListener("click",()=>openDecision(b.dataset.openRequest)));
+ if(!DATA)return;const filter=q('#statusFilter').value,term=q('#requestSearch').value.trim();
+ let rows=(DATA.requests||[]).filter(r=>(filter==='الكل'||r.status===filter)&&(!term||`${r.name} ${r.requestId} ${r.studentId}`.includes(term)));
+ q('#requestsBody').innerHTML=rows.length?rows.map(r=>`<tr><td><b>${escapeHtml(r.requestId)}</b><br><small>${escapeHtml(r.date)}</small></td><td>${escapeHtml(r.name)}<br><small>${escapeHtml(r.studentId)}</small></td><td>${escapeHtml(r.grade)}</td><td>${escapeHtml(r.fromClass)} ← ${escapeHtml(r.toClass)}${r.suggestedClass&&r.suggestedClass!==r.toClass?`<br><small>المقترح: ${escapeHtml(r.suggestedClass)}</small>`:''}</td><td>${escapeHtml(r.reason)}</td><td><span class="badge ${balanceClass(r.balanceLabel)}">${escapeHtml(r.balanceLabel)}</span></td><td><span class="badge ${statusClass(r.status)}">${escapeHtml(r.status)}</span></td><td>${r.status==='قيد المراجعة'?`<div class="actions"><button class="mini-btn approve" data-id="${escapeHtml(r.requestId)}">اعتماد</button><button class="mini-btn reject" data-id="${escapeHtml(r.requestId)}">رفض</button></div>`:`<small>${escapeHtml(r.approvedBy||'')}</small>`}</td></tr>`).join(''):`<tr><td colspan="8">لا توجد طلبات مطابقة.</td></tr>`;
+ qa('.mini-btn').forEach(b=>b.onclick=()=>openDecision(b.dataset.id,b.classList.contains('approve')?'approve':'reject'));
 }
-function requestCard(r){
-  const assessClass=r.balanceScore>0?"good":r.balanceScore<0?"bad":"neutral";
-  const st=r.status==="مقبول"?"approved":r.status==="مرفوض"?"rejected":"pending";
-  return `<article class="request-card">
-    <div class="request-student"><small>${esc(r.requestId)}</small><h3>${esc(r.name)}</h3><p>${esc(r.grade)} • السبب: ${esc(r.reason)}</p></div>
-    <div>
-      <div class="movement">
-        <div class="class-chip"><span>الحالي</span><strong>فصل ${esc(r.fromClass)}</strong></div>
-        <div class="move-arrow"><svg viewBox="0 0 24 24" fill="none"><path d="M19 12H5M10 7l-5 5 5 5"/></svg></div>
-        <div class="class-chip"><span>المطلوب</span><strong>فصل ${esc(r.toClass)}</strong></div>
-      </div>
-      <div class="balance-assessment"><span class="assessment ${assessClass}">${esc(r.balanceLabel)}</span><span class="score">درجة ${r.balanceScore>0?"+":""}${r.balanceScore||0}</span>${r.suggestedClass?`<span class="score">الأنسب: فصل ${r.suggestedClass}</span>`:""}</div>
-    </div>
-    <div class="request-action">${r.status==="قيد المراجعة"?`<button class="btn btn-review btn-small" data-open-request="${esc(r.requestId)}">مراجعة الطلب</button>`:`<span class="status-label ${st}">${esc(r.status)}</span>`}</div>
-  </article>`;
+function openDecision(id,decision){currentRequest={id,decision};const r=DATA.requests.find(x=>x.requestId===id);q('#decisionTitle').textContent=decision==='approve'?'اعتماد طلب النقل':'رفض طلب النقل';q('#decisionInfo').innerHTML=`<p><b>${escapeHtml(r.name)}</b> · ${escapeHtml(r.grade)} · من الفصل ${escapeHtml(r.fromClass)} إلى ${escapeHtml(r.toClass)}</p><p>التقييم الحالي: <span class="badge ${balanceClass(r.balanceLabel)}">${escapeHtml(r.balanceLabel)}</span></p>`;q('#decisionNote').value='';q('#decisionLayer').classList.remove('hidden')}
+q('#cancelDecision').onclick=()=>q('#decisionLayer').classList.add('hidden');q('#approveDecision').onclick=()=>submitDecision('approve');q('#rejectDecision').onclick=()=>submitDecision('reject');
+async function submitDecision(decision){
+ if(!currentRequest)return;setStatus(q('#decisionStatus'),'جاري حفظ القرار...','info');q('#approveDecision').disabled=q('#rejectDecision').disabled=true;
+ try{const s=getSession();await transApi({action:'decision',requestId:currentRequest.id,decision,note:q('#decisionNote').value.trim(),staffName:s.staff});q('#decisionLayer').classList.add('hidden');await load()}
+ catch(e){setStatus(q('#decisionStatus'),e.message,'error')}finally{q('#approveDecision').disabled=q('#rejectDecision').disabled=false}
 }
-function openDecision(id){
-  const r=(state.data.requests||[]).find(x=>x.requestId===id);if(!r)return;state.selected=r;
-  $("dialogTitle").textContent=r.name;
-  $("dialogInfo").innerHTML=`رقم الطلب: <strong>${esc(r.requestId)}</strong><br>من الفصل <strong>${esc(r.fromClass)}</strong> إلى الفصل <strong>${esc(r.toClass)}</strong><br>تقييم الموازنة: <strong>${esc(r.balanceLabel)}</strong>`;
-  $("decisionNote").value="";hide($("decisionStatus"));$("decisionDialog").showModal();
-}
-$("approveBtn").addEventListener("click",()=>decision("approve",$("approveBtn")));
-$("rejectBtn").addEventListener("click",()=>decision("reject",$("rejectBtn")));
-async function decision(decision,btn){
-  if(!state.selected)return;setBtn(btn,true,decision==="approve"?"جاري الاعتماد...":"جاري الرفض...");
-  try{
-    const d=await api({action:"decision",decision,requestId:state.selected.requestId,note:$("decisionNote").value.trim(),staffName:state.staffName});
-    if(!d.success)throw new Error(d.message||"تعذر تنفيذ القرار.");
-    show($("decisionStatus"),d.message,"success");setTimeout(async()=>{$("decisionDialog").close();await loadDashboard()},650);
-  }catch(err){show($("decisionStatus"),err.message,"error")}finally{setBtn(btn,false)}
-}
-
-(function restore(){
-  const k=sessionStorage.getItem("transKey"),s=sessionStorage.getItem("transStaff");
-  if(k&&s){state.key=k;state.staffName=s;$("transKey").value=k;$("staffName").value=s;api({action:"dashboard"}).then(d=>{$("loginLayer").classList.add("hidden");state.data=d;renderAll()}).catch(()=>{})}
-})();
