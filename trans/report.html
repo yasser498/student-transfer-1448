@@ -1,11 +1,13 @@
-<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>التقرير النهائي | نقل الطلاب</title><link rel="stylesheet" href="admin.css?v=2.0.0"></head><body class="admin"><header id="adminTop" class="admin-top no-print"></header>
-<main class="container admin-main"><div class="page-head no-print"><div><span class="eyebrow">التقرير الرسمي</span><h2>التقرير النهائي لنقل الطلاب والموازنة</h2><p>تقرير حي مبني على البيانات الحالية وقرارات الإدارة.</p></div><div class="toolbar"><button id="refreshReport" class="btn btn-light">تحديث</button><button id="csvBtn" class="btn btn-light">تصدير CSV</button><button onclick="window.print()" class="btn btn-primary">طباعة / حفظ PDF</button></div></div><div id="reportStatus" class="status no-print" hidden></div>
-<article id="reportSheet" class="report-sheet"><div class="report-header"><div><img src="../assets/moe-logo.png" alt="وزارة التعليم"></div><div><h1>مدرسة عماد الدين زنكي المتوسطة</h1><b>التقرير النهائي لطلبات نقل الطلاب والموازنة بين الفصول</b><div>العام الدراسي 1448هـ</div></div><div class="report-meta"><div>تاريخ التقرير</div><b id="generatedAt">—</b><div>إعداد</div><b id="preparedBy">—</b></div></div>
-<section class="report-section"><h2>الملخص التنفيذي</h2><div id="reportKpis" class="kpis"></div></section>
-<section class="report-section"><h2>وضع الفصول والموازنة</h2><div id="classesReport"></div></section>
-<section class="report-section"><h2>خطة الموازنة المقترحة</h2><p>الخطة حسابية إرشادية حسب الأعداد المستهدفة والفصول الداخلة في الموازنة، ولا تنفذ نقلًا تلقائيًا.</p><div id="balancePlan" class="plan-list"></div></section>
-<section class="report-section"><h2>سجل طلبات النقل والقرارات</h2><div class="table-wrap"><table class="data-table"><thead><tr><th>رقم الطلب</th><th>الطالب</th><th>الصف</th><th>من ← إلى</th><th>السبب</th><th>الموازنة</th><th>الحالة</th><th>تاريخ القرار</th><th>اعتمد بواسطة</th></tr></thead><tbody id="reportRequests"></tbody></table></div></section>
-<section class="report-section"><h2>ملاحظات واعتمادات</h2><p>تم احتساب الأعداد الحالية مباشرة من بيانات الطلاب، وتطبيق إعدادات إتاحة النقل والاستبعاد والعدد المستهدف المعتمدة من لوحة الإدارة.</p></section>
-<div class="signatures"><div class="signature">إعداد التقرير<br><b id="signPrepared">—</b></div><div class="signature">وكيل شؤون الطلاب<br><br>التوقيع</div><div class="signature">مدير المدرسة<br><br>التوقيع</div></div>
-</article></main>
-<script src="common.js?v=2.0.0"></script><script src="report.js?v=2.0.0"></script></body></html>
+<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>التقرير النهائي | نقل الطلاب</title><link rel="stylesheet" href="/trans/admin.css?v=2.1.0"></head><body>
+<div id="appShell" class="admin-shell"><main class="main"><div class="content">
+ <div class="page-head no-print"><div><span class="eyebrow">التقرير الرسمي</span><h2>التقرير النهائي لنقل الطلاب والموازنة</h2><p>تقرير حي من بيانات الطلاب والطلبات وإعدادات الفصول.</p></div><div class="toolbar"><button id="refreshBtn" class="btn btn-soft">تحديث</button><button id="csvBtn" class="btn btn-soft">تصدير CSV</button><button id="printBtn" class="btn btn-primary">طباعة / حفظ PDF</button></div></div><div id="reportMsg" class="alert hidden no-print"></div>
+ <article class="report-page">
+  <header class="report-header"><img src="/assets/moe-logo.png" alt="وزارة التعليم"><div class="report-title"><h1>مدرسة عماد الدين زنكي المتوسطة</h1><p>التقرير النهائي لطلبات نقل الطلاب والموازنة بين الفصول</p><b>العام الدراسي 1448هـ</b></div><div class="report-meta"><span>تاريخ التقرير</span><b id="generatedAt">—</b><span>إعداد</span><b id="preparedBy">—</b></div></header>
+  <section class="report-section"><h2>الملخص التنفيذي</h2><div id="reportKpis" class="kpi-grid"></div></section>
+  <section class="report-section"><h2>أعداد الفصول وأهداف الموازنة</h2><div id="classReports"></div></section>
+  <section class="report-section"><h2>خطة الموازنة المقترحة</h2><div id="planList" class="plan-list"></div></section>
+  <section class="report-section"><h2>جميع طلبات النقل والقرارات</h2><div class="table-wrap"><table class="table"><thead><tr><th>رقم الطلب</th><th>الطالب</th><th>الصف</th><th>من ← إلى</th><th>السبب</th><th>الموازنة</th><th>الحالة</th><th>تاريخ القرار</th><th>اعتمد بواسطة</th></tr></thead><tbody id="reportRows"></tbody></table></div></section>
+  <div class="signatures"><div class="signature">إعداد التقرير<br><b id="signName">—</b></div><div class="signature">وكيل شؤون الطلاب<br><br>التوقيع</div><div class="signature">مدير المدرسة<br><br>التوقيع</div></div>
+ </article>
+</div></main></div>
+<script src="/assets/config.js?v=2.1.0"></script><script src="/trans/common.js?v=2.1.0"></script><script src="/trans/report.js?v=2.1.0"></script></body></html>

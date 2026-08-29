@@ -1,6 +1,18 @@
-<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>إعدادات النظام | trans</title><link rel="stylesheet" href="admin.css?v=2.0.0"></head><body class="admin"><header id="adminTop" class="admin-top"></header>
-<main class="container admin-main"><div class="page-head"><div><span class="eyebrow">الإعدادات</span><h2>حالة النظام والسياسات</h2><p>صفحة مراجعة الإعدادات والاتصال دون الحاجة إلى فتح Google Sheets.</p></div><div class="toolbar"><button id="healthBtn" class="btn btn-primary">فحص الاتصال</button></div></div><div id="settingsStatus" class="status" hidden></div>
-<section class="card"><div class="card-head"><div><h3>معلومات النظام</h3><p>إعدادات تشغيلية أساسية.</p></div></div><div class="info-grid"><div class="info-box"><span>المدرسة</span><b>مدرسة عماد الدين زنكي المتوسطة</b></div><div class="info-box"><span>العام الدراسي</span><b>1448هـ</b></div><div class="info-box"><span>بيانات الطلاب</span><b>Google Sheet: طلاب1448 / الورقة1</b></div><div class="info-box"><span>طلبات النقل</span><b>تبويب: طلبات النقل</b></div><div class="info-box"><span>إعدادات الفصول</span><b>تبويب: إعدادات الفصول</b></div><div class="info-box"><span>Webhook الطالب</span><b>/webhook/student-transfer-1448-v1</b></div><div class="info-box"><span>Webhook الإدارة</span><b>/webhook/student-transfer-1448-trans-v1</b></div><div class="info-box"><span>المستخدم الحالي</span><b id="currentStaff">—</b></div></div></section>
-<section class="card"><div class="card-head"><div><h3>سياسة الفصول</h3></div></div><div class="info-grid"><div class="info-box"><span>متاح لاستقبال النقل</span><b>إذا تم إيقافه لا يظهر الفصل للطالب، ويرفض النظام الإرسال إليه حتى لو حاول تجاوز الواجهة.</b></div><div class="info-box"><span>مستبعد من الموازنة</span><b>يبقى الفصل موجودًا، لكنه لا يدخل في حساب العدد المتوازن والهدف التلقائي.</b></div><div class="info-box"><span>العدد المستهدف</span><b>يمكن تحديده يدويًا لكل فصل، أو تركه فارغًا ليحسب النظام الهدف تلقائيًا.</b></div><div class="info-box"><span>اعتماد الطلب</span><b>يحدث فصل الطالب في تبويب البيانات ثم يسجل القرار والمستخدم والتاريخ.</b></div></div></section>
-<section class="card"><div class="card-head"><div><h3>ملخص مباشر</h3></div></div><div id="settingsKpis" class="kpis" style="margin:0"></div></section>
-</main><script src="common.js?v=2.0.0"></script><script src="settings.js?v=2.0.0"></script></body></html>
+<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>إعدادات النظام | trans</title><link rel="stylesheet" href="/trans/admin.css?v=2.1.0"></head><body>
+<div id="appShell" class="admin-shell"><main class="main"><div class="content">
+ <div class="page-head"><div><span class="eyebrow">الإعدادات</span><h2>حالة النظام والسياسات</h2><p>مراجعة اتصال النظام وإعداداته الأساسية من الموقع.</p></div><div><button id="healthBtn" class="btn btn-primary">فحص الاتصال</button></div></div><div id="settingsMsg" class="alert hidden"></div>
+ <section class="card"><div class="card-head"><div><h3>معلومات النظام</h3><p>بيانات التشغيل الحالية.</p></div></div><div class="card-body"><div class="info-grid">
+  <div class="info-card"><span>المدرسة</span><b>مدرسة عماد الدين زنكي المتوسطة</b></div><div class="info-card"><span>العام الدراسي</span><b>1448هـ</b></div>
+  <div class="info-card"><span>بيانات الطلاب</span><b>طلاب1448 · الورقة1</b></div><div class="info-card"><span>طلبات النقل</span><b>تبويب طلبات النقل</b></div>
+  <div class="info-card"><span>إعدادات الفصول</span><b>تبويب إعدادات الفصول</b></div><div class="info-card"><span>المستخدم الحالي</span><b id="staffName">—</b></div>
+  <div class="info-card"><span>Webhook الطالب</span><b>/webhook/student-transfer-1448-v1</b></div><div class="info-card"><span>Webhook الإدارة</span><b>/webhook/student-transfer-1448-trans-v1</b></div>
+ </div></div></section>
+ <section class="card"><div class="card-head"><div><h3>سياسات النظام</h3></div></div><div class="card-body"><div class="info-grid">
+  <div class="info-card"><span>إتاحة الفصل للنقل</span><b>إذا أوقفت الفصل فلن يظهر للطالب، ويمنع Backend تقديم الطلب إليه.</b></div>
+  <div class="info-card"><span>الاستبعاد من الموازنة</span><b>الفصل المستبعد لا يدخل في حساب الهدف التلقائي.</b></div>
+  <div class="info-card"><span>العدد المستهدف</span><b>يدوي لكل فصل أو تلقائي إذا ترك فارغًا.</b></div>
+  <div class="info-card"><span>اعتماد الطلب</span><b>يحدث فصل الطالب أولًا ثم يسجل القرار وتاريخه ومن اعتمده.</b></div>
+ </div></div></section>
+ <section class="card"><div class="card-head"><div><h3>ملخص مباشر</h3></div></div><div class="card-body"><div id="healthKpis" class="kpi-grid" style="margin:0"></div></div></section>
+</div></main></div>
+<script src="/assets/config.js?v=2.1.0"></script><script src="/trans/common.js?v=2.1.0"></script><script src="/trans/settings.js?v=2.1.0"></script></body></html>
