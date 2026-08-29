@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#082f36">
+  <meta name="color-scheme" content="light">
+  <title>طلبات نقل الطلاب | عماد الدين زنكي المتوسطة</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/style.css?v=1.0.0">
+</head>
+<body>
+  <div class="ambient ambient-1"></div>
+  <div class="ambient ambient-2"></div>
+
+  <header class="topbar">
+    <div class="container topbar-inner">
+      <div class="brand school-brand">
+        <img class="moe-logo" src="assets/moe-logo.png" alt="شعار وزارة التعليم">
+        <div>
+          <strong>مدرسة عماد الدين زنكي المتوسطة</strong>
+          <span>نظام طلبات نقل الطلاب بين الفصول • العام 1448هـ</span>
+        </div>
+      </div>
+      <div class="topbar-chip">
+        <span class="dot"></span>
+        الخدمة متاحة
+      </div>
+    </div>
+  </header>
+
+  <main class="container page">
+    <section class="hero">
+      <div class="hero-copy">
+        <span class="eyebrow">مدرسة عماد الدين زنكي المتوسطة</span>
+        <h1>طلب نقل الطالب<br><span>من فصل إلى فصل</span></h1>
+        <p>يتم دراسة الطلب وفق أعداد الفصول والموازنة بينها، ثم يُعرض على إدارة المدرسة للاعتماد.</p>
+      </div>
+
+      <div class="hero-visual" aria-hidden="true">
+        <div class="balance-card">
+          <div class="balance-icon">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M12 3v18M5 7h14M7 7l-3 6h6L7 7ZM17 7l-3 6h6l-3-6Z"/>
+            </svg>
+          </div>
+          <div>
+            <small>مبدأ النظام</small>
+            <strong>تحقيق الرغبات مع تحسين توازن الفصول</strong>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="service-shell">
+      <div class="tabs" role="tablist">
+        <button class="tab is-active" data-tab="request" type="button">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14"/></svg>
+          تقديم طلب
+        </button>
+        <button class="tab" data-tab="track" type="button">
+          <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+          متابعة الطلب
+        </button>
+      </div>
+
+      <div class="panel is-active" id="requestPanel">
+        <div class="section-title">
+          <div>
+            <span class="step-badge">1</span>
+            <div>
+              <h2>التحقق من بيانات الطالب</h2>
+              <p>أدخل رقم الطالب / الهوية المسجل في بيانات المدرسة.</p>
+            </div>
+          </div>
+        </div>
+
+        <form id="lookupForm" class="lookup-row" autocomplete="off">
+          <div class="field grow">
+            <label for="studentId">رقم الطالب / الهوية</label>
+            <div class="input-icon">
+              <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4"/><path d="M4 21c.6-4.2 3.2-6.5 8-6.5s7.4 2.3 8 6.5"/></svg>
+              <input id="studentId" inputmode="text" placeholder="أدخل الرقم كما هو" required>
+            </div>
+          </div>
+          <button class="btn btn-primary lookup-btn" type="submit">عرض البيانات</button>
+        </form>
+
+        <div id="publicStatus" class="status" hidden></div>
+
+        <div id="studentBlock" class="student-block" hidden>
+          <div class="student-summary">
+            <div class="student-avatar">
+              <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4"/><path d="M4 21c.6-4.2 3.2-6.5 8-6.5s7.4 2.3 8 6.5"/></svg>
+            </div>
+            <div class="student-main">
+              <small>الطالب</small>
+              <h3 id="studentName">—</h3>
+            </div>
+            <div class="student-meta">
+              <div><span>الصف</span><strong id="studentGrade">—</strong></div>
+              <div><span>الفصل الحالي</span><strong id="studentClass">—</strong></div>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="section-title compact">
+            <div>
+              <span class="step-badge">2</span>
+              <div>
+                <h2>تفاصيل طلب النقل</h2>
+                <p>اختر الفصل المطلوب وسبب الطلب.</p>
+              </div>
+            </div>
+          </div>
+
+          <form id="transferForm" class="transfer-form">
+            <div class="grid-2">
+              <div class="field">
+                <label for="targetClass">الفصل المطلوب</label>
+                <div class="select-wrap">
+                  <select id="targetClass" required>
+                    <option value="">اختر الفصل</option>
+                  </select>
+                  <svg viewBox="0 0 24 24" fill="none"><path d="m8 10 4 4 4-4"/></svg>
+                </div>
+              </div>
+
+              <div class="field">
+                <label for="reason">سبب الطلب</label>
+                <div class="select-wrap">
+                  <select id="reason" required>
+                    <option value="">اختر السبب</option>
+                    <option>ظروف أسرية</option>
+                    <option>وسيلة النقل</option>
+                    <option>وجود أخ / قريب</option>
+                    <option>ظرف صحي</option>
+                    <option>رغبة الطالب</option>
+                    <option>سبب آخر</option>
+                  </select>
+                  <svg viewBox="0 0 24 24" fill="none"><path d="m8 10 4 4 4-4"/></svg>
+                </div>
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="studentNote">ملاحظات <span class="optional">اختياري</span></label>
+              <textarea id="studentNote" rows="4" maxlength="350" placeholder="اكتب أي تفاصيل تساعد في دراسة الطلب..."></textarea>
+            </div>
+
+            <div class="notice">
+              <div class="notice-icon">
+                <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 17h.01"/></svg>
+              </div>
+              <p>إرسال الطلب لا يعني الموافقة النهائية. تتم دراسة الطلب حسب الموازنة بين الفصول والطاقة الاستيعابية.</p>
+            </div>
+
+            <button class="btn btn-primary btn-wide" type="submit">
+              إرسال طلب النقل
+              <svg viewBox="0 0 24 24" fill="none"><path d="M5 12h14M14 7l5 5-5 5"/></svg>
+            </button>
+          </form>
+        </div>
+
+        <div id="successCard" class="success-card" hidden>
+          <div class="success-icon">
+            <svg viewBox="0 0 24 24" fill="none"><path d="m5 12 4 4L19 6"/></svg>
+          </div>
+          <h3>تم استلام طلبك</h3>
+          <p>تم تسجيل الطلب وسيتم مراجعته من إدارة المدرسة.</p>
+          <div class="request-number"><span>رقم الطلب</span><strong id="requestNumber">—</strong></div>
+          <button class="btn btn-soft" type="button" id="newRequestBtn">طلب جديد</button>
+        </div>
+      </div>
+
+      <div class="panel" id="trackPanel">
+        <div class="section-title">
+          <div>
+            <span class="step-badge">
+              <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></svg>
+            </span>
+            <div>
+              <h2>متابعة حالة الطلب</h2>
+              <p>أدخل رقم الطالب / الهوية لعرض آخر الطلبات المسجلة.</p>
+            </div>
+          </div>
+        </div>
+
+        <form id="trackForm" class="lookup-row">
+          <div class="field grow">
+            <label for="trackStudentId">رقم الطالب / الهوية</label>
+            <div class="input-icon">
+              <svg viewBox="0 0 24 24" fill="none"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+              <input id="trackStudentId" inputmode="text" placeholder="أدخل الرقم كما هو" required>
+            </div>
+          </div>
+          <button class="btn btn-primary lookup-btn" type="submit">عرض الطلبات</button>
+        </form>
+
+        <div id="trackStatus" class="status" hidden></div>
+        <div id="trackResults" class="track-results"></div>
+      </div>
+    </section>
+
+    <section class="how-it-works">
+      <article>
+        <span>01</span>
+        <h3>تقديم الطلب</h3>
+        <p>يحدد الطالب الفصل المطلوب وسبب النقل.</p>
+      </article>
+      <article>
+        <span>02</span>
+        <h3>تحليل الموازنة</h3>
+        <p>يحسب النظام أثر النقل على أعداد الفصول.</p>
+      </article>
+      <article>
+        <span>03</span>
+        <h3>مراجعة المدرسة</h3>
+        <p>يتم اعتماد الطلب أو رفضه بعد المراجعة.</p>
+      </article>
+    </section>
+  </main>
+
+  <footer><div class="container">وزارة التعليم • مدرسة عماد الدين زنكي المتوسطة • نظام طلبات نقل الطلاب</div></footer>
+
+  <script src="assets/app.js?v=1.0.0" defer></script>
+</body>
+</html>

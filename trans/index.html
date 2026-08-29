@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#082f36">
+  <title>trans | عماد الدين زنكي المتوسطة</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/style.css?v=1.0.0">
+  <link rel="stylesheet" href="trans.css?v=1.0.0">
+</head>
+<body class="trans-body">
+  <div id="loginLayer" class="login-layer">
+    <form id="loginForm" class="login-card">
+      <div class="login-school-logo">
+        <img src="../assets/moe-logo.png" alt="شعار وزارة التعليم">
+      </div>
+      <span class="eyebrow">trans</span>
+      <h1>مدرسة عماد الدين زنكي المتوسطة</h1><p class="login-subtitle">لوحة إدارة طلبات النقل والموازنة بين الفصول</p>
+      <p>أدخل مفتاح الوصول واسم الموظف لفتح لوحة الطلبات.</p>
+      <div class="field">
+        <label for="transKey">مفتاح الوصول</label>
+        <div class="input-icon">
+          <svg viewBox="0 0 24 24" fill="none"><circle cx="8" cy="15" r="4"/><path d="m11 12 8-8M16 7l2 2M14 9l2 2"/></svg>
+          <input id="transKey" type="password" autocomplete="current-password" required placeholder="••••••••••">
+        </div>
+      </div>
+      <div class="field">
+        <label for="staffName">اسم الموظف</label>
+        <div class="input-icon">
+          <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4"/><path d="M4 21c.6-4.2 3.2-6.5 8-6.5s7.4 2.3 8 6.5"/></svg>
+          <input id="staffName" required placeholder="الاسم">
+        </div>
+      </div>
+      <div id="loginStatus" class="status" hidden></div>
+      <button class="btn btn-primary btn-wide" type="submit">دخول لوحة trans</button>
+    </form>
+  </div>
+
+  <header class="trans-topbar">
+    <div class="container trans-topbar-inner">
+      <div class="trans-brand">
+        <img src="../assets/moe-logo.png" alt="شعار وزارة التعليم">
+        <div>
+          <span class="trans-label">trans</span>
+          <h1>مدرسة عماد الدين زنكي المتوسطة</h1>
+          <small>إدارة طلبات نقل الطلاب</small>
+        </div>
+      </div>
+      <div class="trans-actions">
+        <a class="btn btn-report" href="report.html" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M7 3h7l4 4v14H7z"/><path d="M14 3v5h5M10 13h5M10 17h5"/></svg>
+          التقرير الرسمي
+        </a>
+        <button class="btn btn-light" id="refreshBtn" type="button">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M20 7v5h-5"/><path d="M19 12a7 7 0 1 0-2 5"/></svg>
+          تحديث
+        </button>
+        <button class="btn btn-light" id="logoutBtn" type="button">خروج</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container trans-page">
+    <section class="trans-intro">
+      <div>
+        <span class="eyebrow">لوحة الموازنة</span>
+        <h2>حالة الفصول والطلبات</h2>
+        <p>يعرض النظام الأعداد الحالية ويقيّم أثر كل طلب على توازن الفصول.</p>
+      </div>
+      <div class="summary-grid" id="summaryGrid"></div>
+    </section>
+
+    <section class="grade-section">
+      <div class="section-head">
+        <div>
+          <h2>أعداد الطلاب في الفصول</h2>
+          <p>الأعداد محسوبة مباشرة من تبويب بيانات الطلاب.</p>
+        </div>
+        <div class="grade-tabs" id="gradeTabs"></div>
+      </div>
+      <div id="classBalance" class="class-balance"></div>
+    </section>
+
+    <section class="requests-section">
+      <div class="section-head request-head">
+        <div>
+          <h2>طلبات النقل</h2>
+          <p>رتبت الطلبات المعلقة بحسب أثرها على الموازنة.</p>
+        </div>
+        <div class="filter-row">
+          <button class="filter-btn is-active" data-filter="قيد المراجعة">قيد المراجعة</button>
+          <button class="filter-btn" data-filter="الكل">الكل</button>
+          <input id="searchRequests" type="search" placeholder="بحث بالاسم أو رقم الطلب">
+        </div>
+      </div>
+      <div id="requestsList" class="requests-list"></div>
+      <div id="emptyRequests" class="empty-state" hidden>
+        <svg viewBox="0 0 24 24" fill="none"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+        <h3>لا توجد طلبات مطابقة</h3>
+      </div>
+    </section>
+  </main>
+
+  <dialog id="decisionDialog" class="decision-dialog">
+    <form method="dialog" id="decisionForm">
+      <button class="dialog-close" value="cancel" aria-label="إغلاق">×</button>
+      <span class="eyebrow">قرار الطلب</span>
+      <h3 id="dialogTitle">—</h3>
+      <div id="dialogInfo" class="dialog-info"></div>
+      <div class="field">
+        <label for="decisionNote">ملاحظة على القرار <span class="optional">اختياري</span></label>
+        <textarea id="decisionNote" rows="4" maxlength="350" placeholder="اكتب ملاحظة للطالب إن وجدت..."></textarea>
+      </div>
+      <div class="dialog-actions">
+        <button class="btn btn-danger" type="button" id="rejectBtn">رفض الطلب</button>
+        <button class="btn btn-primary" type="button" id="approveBtn">اعتماد النقل</button>
+      </div>
+      <div id="decisionStatus" class="status" hidden></div>
+    </form>
+  </dialog>
+
+  <script src="trans.js?v=1.0.0" defer></script>
+</body>
+</html>

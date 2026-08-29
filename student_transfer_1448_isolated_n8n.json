@@ -1,0 +1,2985 @@
+{
+  "name": "نظام نقل الطلاب 1448 - مستقل - trans",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "student-transfer-1448-v1",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "08317834-afbd-4d07-8730-3427fcce8f84",
+      "name": "Webhook - موقع النقل",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "6548664a-100e-4055-8d11-e22cce80eeff"
+    },
+    {
+      "parameters": {
+        "httpMethod": "OPTIONS",
+        "path": "student-transfer-1448-v1",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "18402a91-5610-4b1e-9e5b-53ddc865a258",
+      "name": "Webhook - CORS النقل",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        760
+      ],
+      "webhookId": "2340f077-a23a-429d-a39e-ab1b8d2ed062"
+    },
+    {
+      "parameters": {
+        "respondWith": "noData",
+        "options": {
+          "responseCode": 204,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "POST, OPTIONS"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "Content-Type, X-Trans-Key"
+              },
+              {
+                "name": "Access-Control-Max-Age",
+                "value": "86400"
+              }
+            ]
+          }
+        }
+      },
+      "id": "aaafa827-de62-450d-a5d7-4d4419005e53",
+      "name": "رد CORS النقل",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        240,
+        760
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "student-transfer-1448-trans-v1",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "5e8b8a98-c942-4b08-9422-d3b7aa4c7b0c",
+      "name": "Webhook - trans",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        1120
+      ],
+      "webhookId": "e18441f0-d491-467c-b23a-02df8bf3626d"
+    },
+    {
+      "parameters": {
+        "httpMethod": "OPTIONS",
+        "path": "student-transfer-1448-trans-v1",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "2b8b2d05-af53-48f5-acdf-971c539d0309",
+      "name": "Webhook - CORS trans",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        1880
+      ],
+      "webhookId": "71145d32-9721-4ad0-a083-7ba92b554fe5"
+    },
+    {
+      "parameters": {
+        "respondWith": "noData",
+        "options": {
+          "responseCode": 204,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "POST, OPTIONS"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "Content-Type, X-Trans-Key"
+              },
+              {
+                "name": "Access-Control-Max-Age",
+                "value": "86400"
+              }
+            ]
+          }
+        }
+      },
+      "id": "9fa1cb53-c41b-450c-848e-c61e3f7f5586",
+      "name": "رد CORS trans",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        240,
+        1880
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $json.body ?? {};\nconst action = String(body.action ?? '').trim();\nreturn [{json:{\n  action,\n  studentId:String(body.studentId ?? '').trim(),\n  targetClass:String(body.targetClass ?? '').trim(),\n  reason:String(body.reason ?? '').trim(),\n  note:String(body.note ?? '').trim()\n}}];"
+      },
+      "id": "26f7f578-0b9b-4f50-a815-c823f3f85532",
+      "name": "تحليل طلب موقع النقل",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "320da21c-a45d-4813-8d86-e187d9714c59",
+              "leftValue": "={{ $json.action }}",
+              "rightValue": "lookup",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "e61a8b24-6eda-4a9f-a965-6e9f097c468d",
+      "name": "هل العملية استعلام طالب؟",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        470,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "62a33388-a515-4c39-92f5-b3f4fcc1e52a",
+              "leftValue": "={{ $json.action }}",
+              "rightValue": "submit",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "f70ee154-189f-4923-823c-1ff32a318865",
+      "name": "هل العملية تقديم طلب؟",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        470,
+        170
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "f406bbba-a21a-4e21-94e3-150295050841",
+              "leftValue": "={{ $json.action }}",
+              "rightValue": "status",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "58fd2de7-87b2-424a-8b8c-bf6ae3a1bcfa",
+      "name": "هل العملية متابعة؟",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        700,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{json:{success:false,message:'العملية المطلوبة غير مدعومة.'}}];"
+      },
+      "id": "bbbc1faf-9dcd-481c-9501-3f9f937d9fea",
+      "name": "طلب موقع غير صالح",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        930,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 400,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "POST, OPTIONS"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "Content-Type, X-Trans-Key"
+              },
+              {
+                "name": "Cache-Control",
+                "value": "no-store"
+              }
+            ]
+          }
+        }
+      },
+      "id": "3549682f-8fec-4d63-8610-8fc58f026656",
+      "name": "رد خطأ موقع النقل",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        1160,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1y2UVgxNsSuAF4oVnZaRYx7d6yZhtxe3jnVe8JyI_-y0",
+          "mode": "list",
+          "cachedResultName": "طلاب1448",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1y2UVgxNsSuAF4oVnZaRYx7d6yZhtxe3jnVe8JyI_-y0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "الورقة1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1y2UVgxNsSuAF4oVnZaRYx7d6yZhtxe3jnVe8JyI_-y0/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "رقم الطالب",
+              "lookupValue": "={{ $json.studentId }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "9fe075d0-2367-4653-96d8-3faef1d8ce8f",
+      "name": "البحث عن الطالب - استعلام",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        700,
+        -160
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const req=$('تحليل طلب موقع النقل').first().json;\nconst row=$input.first()?.json??{};\nconst name=String(row['اسم الطالب']??'').trim();\nconst gradeCode=String(row['رقم الصف']??'').trim();\nconst classNo=String(row['الفصل']??'').trim();\nconst gradeMap={'730':'الأول متوسط','830':'الثاني متوسط','930':'الثالث متوسط'};\nconst maxMap={'730':6,'830':6,'930':6};\nif(!req.studentId) return [{json:{success:false,message:'يرجى إدخال رقم الطالب / الهوية.'}}];\nif(!name||!gradeMap[gradeCode]||!classNo) return [{json:{success:false,message:'لم يتم العثور على بيانات الطالب.'}}];\nconst availableClasses=Array.from({length:maxMap[gradeCode]},(_,i)=>String(i+1)).filter(x=>x!==classNo);\nreturn [{json:{success:true,student:{studentId:req.studentId,name,gradeCode,grade:gradeMap[gradeCode],class:classNo,availableClasses}}}];"
+      },
+      "id": "8247a6ef-9cd9-4e35-80af-3527d8ff8a08",
+      "name": "بناء نتيجة الطالب",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        940,
+        -160
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "POST, OPTIONS"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "Content-Type, X-Trans-Key"
+              },
+              {
+                "name": "Cache-Control",
+                "value": "no-store"
+              }
+            ]
+          }
+        }
+      },
+      "id": "f00e5bb7-d072-4f01-bb10-ab7c846e6f50",
+      "name": "إرجاع بيانات الطالب",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        1170,
+        -160
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1y2UVgxNsSuAF4oVnZaRYx7d6yZhtxe3jnVe8JyI_-y0",
+          "mode": "list",
+          "cachedResultName": "طلاب1448",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1y2UVgxNsSuAF4oVnZaRYx7d6yZhtxe3jnVe8JyI_-y0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "الورقة1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1y2UVgxNsSuAF4oVnZaRYx7d6yZhtxe3jnVe8JyI_-y0/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "رقم الطالب",
+              "lookupValue": "={{ $json.studentId }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "12c40908-18cd-42df-b5ad-0a6d3d3ca484",
+      "name": "البحث عن الطالب - تقديم",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        700,
+        80
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const req=$('تحليل طلب موقع النقل').first().json;\nconst row=$input.first()?.json??{};\nconst name=String(row['اسم الطالب']??'').trim();\nconst gradeCode=String(row['رقم الصف']??'').trim();\nconst fromClass=String(row['الفصل']??'').trim();\nconst maxMap={'730':6,'830':6,'930':6};\nlet message='';\nif(!name) message='لم يتم العثور على بيانات الطالب.';\nelse if(!req.targetClass||!req.reason) message='يرجى اختيار الفصل المطلوب وسبب الطلب.';\nelse if(req.targetClass===fromClass) message='الفصل المطلوب هو نفس الفصل الحالي.';\nelse if(!maxMap[gradeCode]||Number(req.targetClass)<1||Number(req.targetClass)>maxMap[gradeCode]) message='الفصل المطلوب غير صالح لهذا الصف.';\nreturn [{json:{valid:!message,message,studentId:req.studentId,name,gradeCode,fromClass,toClass:req.targetClass,reason:req.reason,note:req.note}}];"
+      },
+      "id": "9e05b2b5-e000-4496-83a7-e244fa3dd24b",
+      "name": "التحقق من طلب النقل",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        940,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "6871ac17-d43a-4c1e-99e3-6e872dd5f168",
+              "leftValue": "={{ String($json.valid) }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "4c9c7732-35cb-4836-bb09-8c82ccb246cc",
+      "name": "هل بيانات طلب النقل صحيحة؟",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1170,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{json:{success:false,message:$json.message||'تعذر تقديم الطلب.'}}];"
+      },
+      "id": "bd623238-4d46-45ab-8912-acfced7a02c6",
+      "name": "رد طلب غير صالح",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1400,
+        210
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 400,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "POST, OPTIONS"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "Content-Type, X-Trans-Key"
+              },
+              {
+                "name": "Cache-Control",
+                "value": "no-store"
+              }
+            ]
+          }
+        }
+      },
+      "id": "15a72d79-c68f-4b33-8b31-be831f622fc2",
+      "name": "إرجاع خطأ تقديم الطلب",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        1640,
+        210
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1y2UVgxNsSuAF4oVnZaRYx7d6yZhtxe3jnVe8JyI_-y0",
+          "mode": "list",
+          "cachedResultName": "طلاب1448",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1y2UVgxNsSuAF4oVnZaRYx7d6yZhtxe3jnVe8JyI_-y0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=1448001",
+          "mode": "list",
+          "cachedResultName": "طلبات النقل",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1y2UVgxNsSuAF4oVnZaRYx7d6yZhtxe3jnVe8JyI_-y0/edit#gid=1448001"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "رقم الطالب",
+              "lookupValue": "={{ $json.studentId }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a07c34cb-1bf4-4b59-b76d-513b345db429",
+      "name": "فحص طلب قائم",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1400,
+        20
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const prep=$('التحقق من طلب النقل').first().json;\nconst rows=$input.all().map(i=>i.json||{}).filter(r=>String(r['رقم الطلب']??'').trim());\nconst active=rows.find(r=>['قيد المراجعة','مقبول'].includes(String(r['الحالة']??'').trim()));\nreturn [{json:{...prep,canContinue:!active,existingRequest:active?String(active['رقم الطلب']):null,\nmessage:active?`لديك طلب قائم بالفعل (${active['رقم الطلب']}). لا يمكن تقديم طلب جديد حاليًا.`:''}}];"
+      },
+      "id": "941d0ef2-8f4e-4efb-bb63-d7acd5c0daa6",
+      "name": "التحقق من عدم وجود طلب قائم",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1640,
+        20
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "102a06a1-ee16-4409-974e-555716f9e2ae",
+              "leftValue": "={{ String($json.canContinue) }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "8dca3320-6957-4f72-beac-8e2d5c1159a3",
+      "name": "هل يمكن إنشاء طلب جديد؟",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1870,
+        20
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{json:{success:false,message:$json.message,existingRequest:$json.existingRequest}}];"
+      },
+      "id": "eeaee935-bb73-4612-950c-16d33b6510cc",
+      "name": "رد وجود طلب قائم",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2100,
+        150
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 409,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "POST, OPTIONS"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "Content-Type, X-Trans-Key"
+              },
+              {
+                "name": "Cache-Control",
+                "value": "no-store"
+              }
+            ]
+          }
+        }
+      },
+      "id": "bc512f0d-715e-4a2c-a186-50d8d0eccf98",
+      "name": "إرجاع طلب قائم",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        2340,
+        150
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1y2UVgxNsSuAF4oVnZaRYx7d6yZhtxe3jnVe8JyI_-y0",
+          "mode": "list",
+          "cachedResultName": "طلاب1448",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1y2UVgxNsSuAF4oVnZaRYx7d6yZhtxe3jnVe8JyI_-y0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "الورقة1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1y2UVgxNsSuAF4oVnZaRYx7d6yZhtxe3jnVe8JyI_-y0/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": []
+        },
+        "options": {}
+      },
+      "id": "5b6f655c-ace5-4db1-ac04-bdc194f35d84",
+      "name": "قراءة جميع الطلاب للموازنة",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2100,
+        -40
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const prep=$('التحقق من عدم وجود طلب قائم').first().json;\nconst gradeMap={'730':'الأول متوسط','830':'الثاني متوسط','930':'الثالث متوسط'};\nconst maxMap={'730':6,'830':6,'930':6};\nconst all=$input.all().map(i=>i.json||{});\nconst counts={};\nfor(let i=1;i<=maxMap[prep.gradeCode];i++) counts[String(i)]=0;\nfor(const r of all){\n  if(String(r['رقم الصف']??'').trim()===prep.gradeCode){\n    const c=String(r['الفصل']??'').trim();\n    if(c in counts) counts[c]++;\n  }\n}\nconst values=Object.values(counts);\nconst mean=values.reduce((a,b)=>a+b,0)/values.length;\nconst variance=o=>Object.values(o).reduce((s,n)=>s+Math.pow(n-mean,2),0)/values.length;\nconst before=variance(counts);\nconst afterCounts={...counts};\nafterCounts[prep.fromClass]=Math.max(0,(afterCounts[prep.fromClass]||0)-1);\nafterCounts[prep.toClass]=(afterCounts[prep.toClass]||0)+1;\nconst after=variance(afterCounts);\nconst improvement=before-after;\nconst score=Math.round(improvement*10);\nconst label=score>0?'يحسن الموازنة':score<0?'يزيد التفاوت':'محايد';\nconst now=new Date(Date.now()+3*60*60*1000);\nconst pad=n=>String(n).padStart(2,'0');\nconst date=`${now.getUTCFullYear()}-${pad(now.getUTCMonth()+1)}-${pad(now.getUTCDate())} ${pad(now.getUTCHours())}:${pad(now.getUTCMinutes())}`;\nconst stamp=`${now.getUTCFullYear()}${pad(now.getUTCMonth()+1)}${pad(now.getUTCDate())}${pad(now.getUTCHours())}${pad(now.getUTCMinutes())}${pad(now.getUTCSeconds())}`;\nconst requestId=`TR-${stamp}-${Math.random().toString(36).slice(2,6).toUpperCase()}`;\nreturn [{json:{\n  success:true,requestId,\n  'رقم الطلب':requestId,'رقم الطالب':prep.studentId,'اسم الطالب':prep.name,'رقم الصف':prep.gradeCode,'الصف':gradeMap[prep.gradeCode],\n  'الفصل الحالي':prep.fromClass,'الفصل المطلوب':prep.toClass,'سبب الطلب':prep.reason,'ملاحظات الطالب':prep.note,'تاريخ الطلب':date,\n  'الحالة':'قيد المراجعة','تقييم الموازنة':label,'درجة الموازنة':String(score),\n  'عدد الفصل الحالي':String(counts[prep.fromClass]||0),'عدد الفصل المطلوب':String(counts[prep.toClass]||0),\n  'العدد بعد النقل - الحالي':String(afterCounts[prep.fromClass]||0),'العدد بعد النقل - المطلوب':String(afterCounts[prep.toClass]||0),\n  'ملاحظة الإدارة':'','تاريخ القرار':'','اعتمد بواسطة':''\n}}];"
+      },
+      "id": "382a1eb8-8270-40c4-880d-8e967bf2b662",
+      "name": "تجهيز طلب النقل",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2340,
+        -40
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1y2UVgxNsSuAF4oVnZaRYx7d6yZhtxe3jnVe8JyI_-y0",
+          "mode": "list",
+          "cachedResultName": "طلاب1448",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1y2UVgxNsSuAF4oVnZaRYx7d6yZhtxe3jnVe8JyI_-y0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=1448001",
+          "mode": "list",
+          "cachedResultName": "طلبات النقل",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1y2UVgxNsSuAF4oVnZaRYx7d6yZhtxe3jnVe8JyI_-y0/edit#gid=1448001"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "رقم الطلب": "={ $json['رقم الطلب'] }",
+            "رقم الطالب": "={ $json['رقم الطالب'] }",
+            "اسم الطالب": "={ $json['اسم الطالب'] }",
+            "رقم الصف": "={ $json['رقم الصف'] }",
+            "الصف": "={ $json['الصف'] }",
+            "الفصل الحالي": "={ $json['الفصل الحالي'] }",
+            "الفصل المطلوب": "={ $json['الفصل المطلوب'] }",
+            "سبب الطلب": "={ $json['سبب الطلب'] }",
+            "ملاحظات الطالب": "={ $json['ملاحظات الطالب'] }",
+            "تاريخ الطلب": "={ $json['تاريخ الطلب'] }",
+            "الحالة": "={ $json['الحالة'] }",
+            "تقييم الموازنة": "={ $json['تقييم الموازنة'] }",
+            "درجة الموازنة": "={ $json['درجة الموازنة'] }",
+            "عدد الفصل الحالي": "={ $json['عدد الفصل الحالي'] }",
+            "عدد الفصل المطلوب": "={ $json['عدد الفصل المطلوب'] }",
+            "العدد بعد النقل - الحالي": "={ $json['العدد بعد النقل - الحالي'] }",
+            "العدد بعد النقل - المطلوب": "={ $json['العدد بعد النقل - المطلوب'] }",
+            "ملاحظة الإدارة": "={ $json['ملاحظة الإدارة'] }",
+            "تاريخ القرار": "={ $json['تاريخ القرار'] }",
+            "اعتمد بواسطة": "={ $json['اعتمد بواسطة'] }"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "رقم الطلب",
+              "displayName": "رقم الطلب",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "رقم الطالب",
+              "displayName": "رقم الطالب",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "اسم الطالب",
+              "displayName": "اسم الطالب",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "رقم الصف",
+              "displayName": "رقم الصف",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "الصف",
+              "displayName": "الصف",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "الفصل الحالي",
+              "displayName": "الفصل الحالي",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "الفصل المطلوب",
+              "displayName": "الفصل المطلوب",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "سبب الطلب",
+              "displayName": "سبب الطلب",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ملاحظات الطالب",
+              "displayName": "ملاحظات الطالب",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "تاريخ الطلب",
+              "displayName": "تاريخ الطلب",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "الحالة",
+              "displayName": "الحالة",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "تقييم الموازنة",
+              "displayName": "تقييم الموازنة",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "درجة الموازنة",
+              "displayName": "درجة الموازنة",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "عدد الفصل الحالي",
+              "displayName": "عدد الفصل الحالي",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "عدد الفصل المطلوب",
+              "displayName": "عدد الفصل المطلوب",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "العدد بعد النقل - الحالي",
+              "displayName": "العدد بعد النقل - الحالي",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "العدد بعد النقل - المطلوب",
+              "displayName": "العدد بعد النقل - المطلوب",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ملاحظة الإدارة",
+              "displayName": "ملاحظة الإدارة",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "تاريخ القرار",
+              "displayName": "تاريخ القرار",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "اعتمد بواسطة",
+              "displayName": "اعتمد بواسطة",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "37c7e13b-eb33-4430-a177-238e5fec93f9",
+      "name": "حفظ طلب النقل",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2580,
+        -40
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const r=$('تجهيز طلب النقل').first().json;\nreturn [{json:{success:true,requestId:r.requestId,message:'تم استلام طلب النقل بنجاح وهو الآن قيد المراجعة.'}}];"
+      },
+      "id": "6eb39c98-61a3-4309-bb99-7c592572ab44",
+      "name": "نجاح تسجيل الطلب",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2820,
+        -40
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "POST, OPTIONS"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "Content-Type, X-Trans-Key"
+              },
+              {
+                "name": "Cache-Control",
+                "value": "no-store"
+              }
+            ]
+          }
+        }
+      },
+      "id": "89053f49-3411-4b93-a900-102719b91aea",
+      "name": "إرجاع نجاح طلب النقل",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        3060,
+        -40
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1y2UVgxNsSuAF4oVnZaRYx7d6yZhtxe3jnVe8JyI_-y0",
+          "mode": "list",
+          "cachedResultName": "طلاب1448",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1y2UVgxNsSuAF4oVnZaRYx7d6yZhtxe3jnVe8JyI_-y0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=1448001",
+          "mode": "list",
+          "cachedResultName": "طلبات النقل",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1y2UVgxNsSuAF4oVnZaRYx7d6yZhtxe3jnVe8JyI_-y0/edit#gid=1448001"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "رقم الطالب",
+              "lookupValue": "={{ $json.studentId }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e8bb3dcf-efd1-4d55-8dca-c087ab3ba50e",
+      "name": "البحث عن طلبات الطالب",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        940,
+        300
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const req=$('تحليل طلب موقع النقل').first().json;\nconst rows=$input.all().map(i=>i.json||{}).filter(r=>String(r['رقم الطلب']??'').trim());\nrows.sort((a,b)=>String(b['تاريخ الطلب']??'').localeCompare(String(a['تاريخ الطلب']??'')));\nconst requests=rows.slice(0,8).map(r=>({\n requestId:String(r['رقم الطلب']??''),date:String(r['تاريخ الطلب']??''),status:String(r['الحالة']??'قيد المراجعة'),\n fromClass:String(r['الفصل الحالي']??''),toClass:String(r['الفصل المطلوب']??''),reason:String(r['سبب الطلب']??''),\n managementNote:String(r['ملاحظة الإدارة']??'')\n}));\nreturn [{json:{success:requests.length>0,requests,message:requests.length?'':'لا توجد طلبات مسجلة لهذا الرقم.'}}];"
+      },
+      "id": "fead9139-b79d-4b35-a6a1-ecd0272e1d73",
+      "name": "بناء متابعة الطلبات",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1170,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "POST, OPTIONS"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "Content-Type, X-Trans-Key"
+              },
+              {
+                "name": "Cache-Control",
+                "value": "no-store"
+              }
+            ]
+          }
+        }
+      },
+      "id": "3f2ee46b-544d-42c6-8b94-d360276d48e8",
+      "name": "إرجاع متابعة الطلبات",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        1400,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const body=$json.body??{};\nconst headers=$json.headers??{};\nconst key=String(headers['x-trans-key']??headers['X-Trans-Key']??body.transKey??'').trim();\nconst TRANS_KEY='CHANGE_ME_TRANS_KEY';\nreturn [{json:{\n action:String(body.action??'').trim(),requestId:String(body.requestId??'').trim(),decision:String(body.decision??'').trim(),\n note:String(body.note??'').trim(),staffName:String(body.staffName??'').trim(),authorized:key===TRANS_KEY\n}}];"
+      },
+      "id": "fb4714e3-95dc-4d3c-9f70-29d46e12d327",
+      "name": "تحليل طلب trans",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        1120
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "a7e78512-598b-49af-8ce6-7f91f032ff58",
+              "leftValue": "={{ String($json.authorized) }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "36877572-3c2b-4692-9957-b96274974d7b",
+      "name": "هل دخول trans مصرح؟",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        470,
+        1120
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{json:{success:false,message:'مفتاح الوصول غير صحيح.'}}];"
+      },
+      "id": "3b1517b2-42a6-49d4-ae99-a0734d28c97b",
+      "name": "رفض دخول trans",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        700,
+        1320
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 401,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "POST, OPTIONS"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "Content-Type, X-Trans-Key"
+              },
+              {
+                "name": "Cache-Control",
+                "value": "no-store"
+              }
+            ]
+          }
+        }
+      },
+      "id": "cfdc739e-3c2e-437c-ac57-42a62149c7b9",
+      "name": "إرجاع رفض trans",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        940,
+        1320
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "0dbc1ce4-43a4-44ff-b2d6-ac2ab5c540ff",
+              "leftValue": "={{ $json.action }}",
+              "rightValue": "dashboard",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "9b34cad4-633b-43b0-947f-0acee0842e66",
+      "name": "هل trans يطلب لوحة البيانات؟",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        700,
+        1040
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "1040b799-2182-4af8-b71f-9d66cac96bf7",
+              "leftValue": "={{ $json.action }}",
+              "rightValue": "decision",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "50149d4d-5f97-4e5d-99b3-e8a8d50fc707",
+      "name": "هل trans يرسل قرار؟",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        940,
+        1190
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{json:{success:false,message:'العملية المطلوبة غير مدعومة.'}}];"
+      },
+      "id": "af65b562-4186-4ee9-a552-dd6287322f5f",
+      "name": "عملية trans غير صالحة",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1170,
+        1320
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 400,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "POST, OPTIONS"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "Content-Type, X-Trans-Key"
+              },
+              {
+                "name": "Cache-Control",
+                "value": "no-store"
+              }
+            ]
+          }
+        }
+      },
+      "id": "299c6c9f-016c-434b-8009-523a5b4031a1",
+      "name": "إرجاع خطأ trans",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        1400,
+        1320
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1y2UVgxNsSuAF4oVnZaRYx7d6yZhtxe3jnVe8JyI_-y0",
+          "mode": "list",
+          "cachedResultName": "طلاب1448",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1y2UVgxNsSuAF4oVnZaRYx7d6yZhtxe3jnVe8JyI_-y0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "الورقة1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1y2UVgxNsSuAF4oVnZaRYx7d6yZhtxe3jnVe8JyI_-y0/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": []
+        },
+        "options": {}
+      },
+      "id": "c1037b9d-38b6-48aa-8a84-084099c785ba",
+      "name": "قراءة الطلاب - trans",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        940,
+        950
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{json:{students:$input.all().map(i=>i.json||{})}}];"
+      },
+      "id": "e2c5f225-57e9-43c9-95d6-1e3ed3b0536d",
+      "name": "تجميع الطلاب - trans",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1170,
+        950
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1y2UVgxNsSuAF4oVnZaRYx7d6yZhtxe3jnVe8JyI_-y0",
+          "mode": "list",
+          "cachedResultName": "طلاب1448",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1y2UVgxNsSuAF4oVnZaRYx7d6yZhtxe3jnVe8JyI_-y0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=1448001",
+          "mode": "list",
+          "cachedResultName": "طلبات النقل",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1y2UVgxNsSuAF4oVnZaRYx7d6yZhtxe3jnVe8JyI_-y0/edit#gid=1448001"
+        },
+        "filtersUI": {
+          "values": []
+        },
+        "options": {}
+      },
+      "id": "89424486-fb41-4677-a34b-dbd8affbcb11",
+      "name": "قراءة الطلبات - trans",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1400,
+        950
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const students=$('تجميع الطلاب - trans').first().json.students||[];\nconst requests=$input.all().map(i=>i.json||{}).filter(r=>String(r['رقم الطلب']??'').trim());\nconst gradeMap={'730':'الأول متوسط','830':'الثاني متوسط','930':'الثالث متوسط'};\nconst maxMap={'730':6,'830':6,'930':6};\nconst grades={};\nfor(const [code,name] of Object.entries(gradeMap)){\n const classes={};for(let i=1;i<=maxMap[code];i++)classes[String(i)]=0;\n grades[name]={code,classes,total:0};\n}\nfor(const s of students){\n const code=String(s['رقم الصف']??'').trim(), c=String(s['الفصل']??'').trim(), name=gradeMap[code];\n if(name&&c in grades[name].classes){grades[name].classes[c]++;grades[name].total++;}\n}\nfunction liveEval(r){\n const grade=String(r['الصف']??''), from=String(r['الفصل الحالي']??''), to=String(r['الفصل المطلوب']??'');\n const g=grades[grade];if(!g||!(from in g.classes)||!(to in g.classes)) return {score:0,label:'غير محسوب',suggestedClass:null};\n const counts={...g.classes}, vals=Object.values(counts), mean=vals.reduce((a,b)=>a+b,0)/vals.length;\n const variance=o=>Object.values(o).reduce((s,n)=>s+Math.pow(n-mean,2),0)/vals.length;\n const before=variance(counts), after={...counts};after[from]=Math.max(0,after[from]-1);after[to]++;\n const score=Math.round((before-variance(after))*10);\n const label=score>0?'يحسن الموازنة':score<0?'يزيد التفاوت':'محايد';\n const targets=Object.entries(counts).filter(([c])=>c!==from).sort((a,b)=>a[1]-b[1]);\n return {score,label,suggestedClass:targets[0]?.[0]??null};\n}\nconst safe=requests.map(r=>{\n const e=liveEval(r);\n return {\n  requestId:String(r['رقم الطلب']??''),studentId:String(r['رقم الطالب']??''),name:String(r['اسم الطالب']??''),\n  grade:String(r['الصف']??''),gradeCode:String(r['رقم الصف']??''),fromClass:String(r['الفصل الحالي']??''),toClass:String(r['الفصل المطلوب']??''),\n  reason:String(r['سبب الطلب']??''),note:String(r['ملاحظات الطالب']??''),date:String(r['تاريخ الطلب']??''),status:String(r['الحالة']??'قيد المراجعة'),\n  balanceScore:e.score,balanceLabel:e.label,suggestedClass:e.suggestedClass,managementNote:String(r['ملاحظة الإدارة']??'')\n };\n});\nsafe.sort((a,b)=>String(b.date).localeCompare(String(a.date)));\nconst summary={\n pending:safe.filter(r=>r.status==='قيد المراجعة').length,\n approved:safe.filter(r=>r.status==='مقبول').length,\n rejected:safe.filter(r=>r.status==='مرفوض').length\n};\nreturn [{json:{success:true,summary,grades,requests:safe}}];"
+      },
+      "id": "95132d2b-fe76-48a7-8109-e26f0bc991b4",
+      "name": "بناء لوحة trans",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1640,
+        950
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "POST, OPTIONS"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "Content-Type, X-Trans-Key"
+              },
+              {
+                "name": "Cache-Control",
+                "value": "no-store"
+              }
+            ]
+          }
+        }
+      },
+      "id": "d7cadead-5566-40a2-a10a-f7f678bb3b3f",
+      "name": "إرجاع لوحة trans",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        1880,
+        950
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1y2UVgxNsSuAF4oVnZaRYx7d6yZhtxe3jnVe8JyI_-y0",
+          "mode": "list",
+          "cachedResultName": "طلاب1448",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1y2UVgxNsSuAF4oVnZaRYx7d6yZhtxe3jnVe8JyI_-y0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=1448001",
+          "mode": "list",
+          "cachedResultName": "طلبات النقل",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1y2UVgxNsSuAF4oVnZaRYx7d6yZhtxe3jnVe8JyI_-y0/edit#gid=1448001"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "رقم الطلب",
+              "lookupValue": "={{ $json.requestId }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "4f667365-c3aa-4946-b646-9c0f5436132b",
+      "name": "البحث عن طلب بالرقم",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1170,
+        1160
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const req=$('تحليل طلب trans').first().json;\nconst row=$input.first()?.json??{};\nconst id=String(row['رقم الطلب']??'').trim();\nconst status=String(row['الحالة']??'').trim();\nconst decision=req.decision;\nlet message='';\nif(!id) message='لم يتم العثور على الطلب.';\nelse if(status!=='قيد المراجعة') message=`لا يمكن تعديل هذا الطلب لأن حالته الحالية: ${status}`;\nelse if(!['approve','reject'].includes(decision)) message='القرار غير صالح.';\nelse if(!req.staffName) message='اسم الموظف مطلوب.';\nconst now=new Date(Date.now()+3*60*60*1000),pad=n=>String(n).padStart(2,'0');\nconst decisionDate=`${now.getUTCFullYear()}-${pad(now.getUTCMonth()+1)}-${pad(now.getUTCDate())} ${pad(now.getUTCHours())}:${pad(now.getUTCMinutes())}`;\nreturn [{json:{\n valid:!message,message,decision,requestId:id,studentId:String(row['رقم الطالب']??''),name:String(row['اسم الطالب']??''),\n fromClass:String(row['الفصل الحالي']??''),toClass:String(row['الفصل المطلوب']??''),note:req.note,staffName:req.staffName,decisionDate,\n newStatus:decision==='approve'?'مقبول':'مرفوض'\n}}];"
+      },
+      "id": "a58393cf-0baf-4d85-bfe8-ff9af515e68b",
+      "name": "تجهيز قرار trans",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1400,
+        1160
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "37a35db3-ff91-4329-b454-5bae9eaa3423",
+              "leftValue": "={{ String($json.valid) }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "85dd78bf-56d2-41b8-92d8-edb29deea1be",
+      "name": "هل قرار trans صالح؟",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1640,
+        1160
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{json:{success:false,message:$json.message}}];"
+      },
+      "id": "22d106bd-e7d2-4767-9a77-9139c9adcb77",
+      "name": "رد قرار trans غير صالح",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1880,
+        1320
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 400,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "POST, OPTIONS"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "Content-Type, X-Trans-Key"
+              },
+              {
+                "name": "Cache-Control",
+                "value": "no-store"
+              }
+            ]
+          }
+        }
+      },
+      "id": "06cdd0c3-9b70-4375-aeef-3848da70fae6",
+      "name": "إرجاع خطأ قرار trans",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        2120,
+        1320
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "7a91cf00-be87-4de9-98f5-e9411a823fc2",
+              "leftValue": "={{ $json.decision }}",
+              "rightValue": "approve",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "516ba8b4-aa33-4af8-b891-b3dbf3e7345e",
+      "name": "هل القرار اعتماد؟",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1880,
+        1100
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1y2UVgxNsSuAF4oVnZaRYx7d6yZhtxe3jnVe8JyI_-y0",
+          "mode": "list",
+          "cachedResultName": "طلاب1448",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1y2UVgxNsSuAF4oVnZaRYx7d6yZhtxe3jnVe8JyI_-y0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=1448001",
+          "mode": "list",
+          "cachedResultName": "طلبات النقل",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1y2UVgxNsSuAF4oVnZaRYx7d6yZhtxe3jnVe8JyI_-y0/edit#gid=1448001"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "رقم الطلب": "={{ $('تجهيز قرار trans').first().json.requestId }}",
+            "الحالة": "={{ $('تجهيز قرار trans').first().json.newStatus }}",
+            "ملاحظة الإدارة": "={{ $('تجهيز قرار trans').first().json.note }}",
+            "تاريخ القرار": "={{ $('تجهيز قرار trans').first().json.decisionDate }}",
+            "اعتمد بواسطة": "={{ $('تجهيز قرار trans').first().json.staffName }}"
+          },
+          "matchingColumns": [
+            "رقم الطلب"
+          ],
+          "schema": [
+            {
+              "id": "رقم الطلب",
+              "displayName": "رقم الطلب",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "رقم الطالب",
+              "displayName": "رقم الطالب",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "اسم الطالب",
+              "displayName": "اسم الطالب",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "رقم الصف",
+              "displayName": "رقم الصف",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "الصف",
+              "displayName": "الصف",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "الفصل الحالي",
+              "displayName": "الفصل الحالي",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "الفصل المطلوب",
+              "displayName": "الفصل المطلوب",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "سبب الطلب",
+              "displayName": "سبب الطلب",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ملاحظات الطالب",
+              "displayName": "ملاحظات الطالب",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "تاريخ الطلب",
+              "displayName": "تاريخ الطلب",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "الحالة",
+              "displayName": "الحالة",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "تقييم الموازنة",
+              "displayName": "تقييم الموازنة",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "درجة الموازنة",
+              "displayName": "درجة الموازنة",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "عدد الفصل الحالي",
+              "displayName": "عدد الفصل الحالي",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "عدد الفصل المطلوب",
+              "displayName": "عدد الفصل المطلوب",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "العدد بعد النقل - الحالي",
+              "displayName": "العدد بعد النقل - الحالي",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "العدد بعد النقل - المطلوب",
+              "displayName": "العدد بعد النقل - المطلوب",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ملاحظة الإدارة",
+              "displayName": "ملاحظة الإدارة",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "تاريخ القرار",
+              "displayName": "تاريخ القرار",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "اعتمد بواسطة",
+              "displayName": "اعتمد بواسطة",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "0019c7fa-017a-4c9f-833b-3c5edbbfd731",
+      "name": "تحديث الطلب - رفض",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2120,
+        1210
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{json:{success:true,message:'تم رفض الطلب وتحديث حالته.'}}];"
+      },
+      "id": "27a31506-5e02-4b62-b6e1-abcf3f48f58c",
+      "name": "نجاح رفض الطلب",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2360,
+        1210
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "POST, OPTIONS"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "Content-Type, X-Trans-Key"
+              },
+              {
+                "name": "Cache-Control",
+                "value": "no-store"
+              }
+            ]
+          }
+        }
+      },
+      "id": "49f3820c-0048-4706-b09a-ea2fb0817b84",
+      "name": "إرجاع نجاح الرفض",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        2600,
+        1210
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1y2UVgxNsSuAF4oVnZaRYx7d6yZhtxe3jnVe8JyI_-y0",
+          "mode": "list",
+          "cachedResultName": "طلاب1448",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1y2UVgxNsSuAF4oVnZaRYx7d6yZhtxe3jnVe8JyI_-y0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "الورقة1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1y2UVgxNsSuAF4oVnZaRYx7d6yZhtxe3jnVe8JyI_-y0/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "رقم الطالب",
+              "lookupValue": "={{ $json.studentId }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "2ca8c822-751b-4e48-95fa-fd6aa2acce3e",
+      "name": "قراءة الطالب قبل الاعتماد",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2120,
+        1040
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const d=$('تجهيز قرار trans').first().json;\nconst row=$input.first()?.json??{};\nconst name=String(row['اسم الطالب']??'').trim();\nconst current=String(row['الفصل']??'').trim();\nif(!name) return [{json:{canApprove:false,message:'لم يتم العثور على الطالب في بيانات الطلاب.'}}];\nif(current!==d.fromClass) return [{json:{canApprove:false,message:`تعذر الاعتماد لأن فصل الطالب تغيّر من ${d.fromClass} إلى ${current}. حدّث اللوحة وراجع الطلب.`}}];\nreturn [{json:{canApprove:true,studentId:d.studentId,toClass:d.toClass}}];"
+      },
+      "id": "a53907b9-ac71-4cb5-9998-663a04341a16",
+      "name": "التحقق قبل اعتماد النقل",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2360,
+        1040
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "575ecffa-dc8f-4edd-acef-bdbf5c4a3bba",
+              "leftValue": "={{ String($json.canApprove) }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "79d32383-a602-4961-aa4c-1e2432d8aa85",
+      "name": "هل يمكن اعتماد النقل الآن؟",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2600,
+        1040
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{json:{success:false,message:$json.message}}];"
+      },
+      "id": "b7a60aa7-783c-48ab-aca1-eea4c9ddb75e",
+      "name": "رد تعذر الاعتماد",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2840,
+        1160
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 409,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "POST, OPTIONS"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "Content-Type, X-Trans-Key"
+              },
+              {
+                "name": "Cache-Control",
+                "value": "no-store"
+              }
+            ]
+          }
+        }
+      },
+      "id": "f146a17d-0f50-4700-b56e-469de80d192b",
+      "name": "إرجاع تعذر الاعتماد",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        3080,
+        1160
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1y2UVgxNsSuAF4oVnZaRYx7d6yZhtxe3jnVe8JyI_-y0",
+          "mode": "list",
+          "cachedResultName": "طلاب1448",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1y2UVgxNsSuAF4oVnZaRYx7d6yZhtxe3jnVe8JyI_-y0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "الورقة1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1y2UVgxNsSuAF4oVnZaRYx7d6yZhtxe3jnVe8JyI_-y0/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "رقم الطالب": "={{ $json.studentId }}",
+            "الفصل": "={{ $json.toClass }}"
+          },
+          "matchingColumns": [
+            "رقم الطالب"
+          ],
+          "schema": [
+            {
+              "id": "الجوال",
+              "displayName": "الجوال",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "الفصل",
+              "displayName": "الفصل",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "رقم الصف",
+              "displayName": "رقم الصف",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "اسم الطالب",
+              "displayName": "اسم الطالب",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "رقم الطالب",
+              "displayName": "رقم الطالب",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "9e70a2d6-1e8f-4476-bd41-4dcbf5079283",
+      "name": "تحديث فصل الطالب",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2840,
+        980
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1y2UVgxNsSuAF4oVnZaRYx7d6yZhtxe3jnVe8JyI_-y0",
+          "mode": "list",
+          "cachedResultName": "طلاب1448",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1y2UVgxNsSuAF4oVnZaRYx7d6yZhtxe3jnVe8JyI_-y0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=1448001",
+          "mode": "list",
+          "cachedResultName": "طلبات النقل",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1y2UVgxNsSuAF4oVnZaRYx7d6yZhtxe3jnVe8JyI_-y0/edit#gid=1448001"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "رقم الطلب": "={{ $('تجهيز قرار trans').first().json.requestId }}",
+            "الحالة": "مقبول",
+            "ملاحظة الإدارة": "={{ $('تجهيز قرار trans').first().json.note }}",
+            "تاريخ القرار": "={{ $('تجهيز قرار trans').first().json.decisionDate }}",
+            "اعتمد بواسطة": "={{ $('تجهيز قرار trans').first().json.staffName }}"
+          },
+          "matchingColumns": [
+            "رقم الطلب"
+          ],
+          "schema": [
+            {
+              "id": "رقم الطلب",
+              "displayName": "رقم الطلب",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "رقم الطالب",
+              "displayName": "رقم الطالب",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "اسم الطالب",
+              "displayName": "اسم الطالب",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "رقم الصف",
+              "displayName": "رقم الصف",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "الصف",
+              "displayName": "الصف",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "الفصل الحالي",
+              "displayName": "الفصل الحالي",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "الفصل المطلوب",
+              "displayName": "الفصل المطلوب",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "سبب الطلب",
+              "displayName": "سبب الطلب",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ملاحظات الطالب",
+              "displayName": "ملاحظات الطالب",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "تاريخ الطلب",
+              "displayName": "تاريخ الطلب",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "الحالة",
+              "displayName": "الحالة",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "تقييم الموازنة",
+              "displayName": "تقييم الموازنة",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "درجة الموازنة",
+              "displayName": "درجة الموازنة",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "عدد الفصل الحالي",
+              "displayName": "عدد الفصل الحالي",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "عدد الفصل المطلوب",
+              "displayName": "عدد الفصل المطلوب",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "العدد بعد النقل - الحالي",
+              "displayName": "العدد بعد النقل - الحالي",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "العدد بعد النقل - المطلوب",
+              "displayName": "العدد بعد النقل - المطلوب",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ملاحظة الإدارة",
+              "displayName": "ملاحظة الإدارة",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "تاريخ القرار",
+              "displayName": "تاريخ القرار",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "اعتمد بواسطة",
+              "displayName": "اعتمد بواسطة",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "b055fa37-2903-4351-837e-74d297f98fe0",
+      "name": "تحديث الطلب - اعتماد",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        3080,
+        980
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{json:{success:true,message:'تم اعتماد النقل وتحديث فصل الطالب في بيانات الطلاب.'}}];"
+      },
+      "id": "9295ab1b-0058-4804-8994-379ab61317b1",
+      "name": "نجاح اعتماد النقل",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3320,
+        980
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "POST, OPTIONS"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "Content-Type, X-Trans-Key"
+              },
+              {
+                "name": "Cache-Control",
+                "value": "no-store"
+              }
+            ]
+          }
+        }
+      },
+      "id": "5042f81e-b55a-45b5-a948-b92c60cd4d73",
+      "name": "إرجاع نجاح الاعتماد",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        3560,
+        980
+      ]
+    },
+    {
+      "parameters": {
+        "content": "# نظام طلبات نقل الطلاب 1448 — نسخة مستقلة وآمنة\n\n## الاستقلال عن n8n الحالي\n- Workflow جديد مستقل.\n- `active: false` عند الاستيراد.\n- لا يعدّل أو يحذف أي Workflow موجود.\n- Webhooks جديدة وفريدة.\n- لا يوجد Credential محفوظ داخل JSON؛ اختر Google Sheets Credential داخل هذا الـWorkflow فقط بعد الاستيراد.\n\n## Google Sheet الصحيح\nالاسم الفعلي: `طلاب1448`\nID:\n`1y2UVgxNsSuAF4oVnZaRYx7d6yZhtxe3jnVe8JyI_-y0`\n\nتبويب الطلاب:\n- `الورقة1`\n- gid = 0\n- الأعمدة: الجوال، الفصل، رقم الصف، اسم الطالب، رقم الطالب\n\nتبويب الطلبات:\n- `طلبات النقل`\n- gid = 1448001\n\n## رموز الصفوف الموجودة في الملف\n- 730 = الأول متوسط\n- 830 = الثاني متوسط\n- 930 = الثالث متوسط\n- الفصول الحالية: 1 إلى 6 للصفوف الثلاثة\n\n## Webhooks الجديدة\nصفحة الطالب:\n`https://n8n.yasergrid.online/webhook/student-transfer-1448-v1`\n\nصفحة trans:\n`https://n8n.yasergrid.online/webhook/student-transfer-1448-trans-v1`\n\n## مفتاح trans\nافتح عقدة:\n`تحليل طلب trans`\n\nوغيّر:\n`CHANGE_ME_TRANS_KEY`\n\nإلى مفتاح قوي خاص بك.\n"
+      },
+      "id": "8324be9c-8bee-4a82-b518-b829beeacb32",
+      "name": "تعليمات النظام",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -20,
+        -420
+      ],
+      "notesInFlow": true
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook - موقع النقل": {
+      "main": [
+        [
+          {
+            "node": "تحليل طلب موقع النقل",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "تحليل طلب موقع النقل": {
+      "main": [
+        [
+          {
+            "node": "هل العملية استعلام طالب؟",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "هل العملية استعلام طالب؟": {
+      "main": [
+        [
+          {
+            "node": "البحث عن الطالب - استعلام",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "هل العملية تقديم طلب؟",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "البحث عن الطالب - استعلام": {
+      "main": [
+        [
+          {
+            "node": "بناء نتيجة الطالب",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "بناء نتيجة الطالب": {
+      "main": [
+        [
+          {
+            "node": "إرجاع بيانات الطالب",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "هل العملية تقديم طلب؟": {
+      "main": [
+        [
+          {
+            "node": "البحث عن الطالب - تقديم",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "هل العملية متابعة؟",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "هل العملية متابعة؟": {
+      "main": [
+        [
+          {
+            "node": "البحث عن طلبات الطالب",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "طلب موقع غير صالح",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "طلب موقع غير صالح": {
+      "main": [
+        [
+          {
+            "node": "رد خطأ موقع النقل",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "البحث عن الطالب - تقديم": {
+      "main": [
+        [
+          {
+            "node": "التحقق من طلب النقل",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "التحقق من طلب النقل": {
+      "main": [
+        [
+          {
+            "node": "هل بيانات طلب النقل صحيحة؟",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "هل بيانات طلب النقل صحيحة؟": {
+      "main": [
+        [
+          {
+            "node": "فحص طلب قائم",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "رد طلب غير صالح",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "رد طلب غير صالح": {
+      "main": [
+        [
+          {
+            "node": "إرجاع خطأ تقديم الطلب",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "فحص طلب قائم": {
+      "main": [
+        [
+          {
+            "node": "التحقق من عدم وجود طلب قائم",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "التحقق من عدم وجود طلب قائم": {
+      "main": [
+        [
+          {
+            "node": "هل يمكن إنشاء طلب جديد؟",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "هل يمكن إنشاء طلب جديد؟": {
+      "main": [
+        [
+          {
+            "node": "قراءة جميع الطلاب للموازنة",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "رد وجود طلب قائم",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "رد وجود طلب قائم": {
+      "main": [
+        [
+          {
+            "node": "إرجاع طلب قائم",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "قراءة جميع الطلاب للموازنة": {
+      "main": [
+        [
+          {
+            "node": "تجهيز طلب النقل",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "تجهيز طلب النقل": {
+      "main": [
+        [
+          {
+            "node": "حفظ طلب النقل",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "حفظ طلب النقل": {
+      "main": [
+        [
+          {
+            "node": "نجاح تسجيل الطلب",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "نجاح تسجيل الطلب": {
+      "main": [
+        [
+          {
+            "node": "إرجاع نجاح طلب النقل",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "البحث عن طلبات الطالب": {
+      "main": [
+        [
+          {
+            "node": "بناء متابعة الطلبات",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "بناء متابعة الطلبات": {
+      "main": [
+        [
+          {
+            "node": "إرجاع متابعة الطلبات",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook - CORS النقل": {
+      "main": [
+        [
+          {
+            "node": "رد CORS النقل",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook - trans": {
+      "main": [
+        [
+          {
+            "node": "تحليل طلب trans",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "تحليل طلب trans": {
+      "main": [
+        [
+          {
+            "node": "هل دخول trans مصرح؟",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "هل دخول trans مصرح؟": {
+      "main": [
+        [
+          {
+            "node": "هل trans يطلب لوحة البيانات؟",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "رفض دخول trans",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "رفض دخول trans": {
+      "main": [
+        [
+          {
+            "node": "إرجاع رفض trans",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "هل trans يطلب لوحة البيانات؟": {
+      "main": [
+        [
+          {
+            "node": "قراءة الطلاب - trans",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "هل trans يرسل قرار؟",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "قراءة الطلاب - trans": {
+      "main": [
+        [
+          {
+            "node": "تجميع الطلاب - trans",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "تجميع الطلاب - trans": {
+      "main": [
+        [
+          {
+            "node": "قراءة الطلبات - trans",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "قراءة الطلبات - trans": {
+      "main": [
+        [
+          {
+            "node": "بناء لوحة trans",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "بناء لوحة trans": {
+      "main": [
+        [
+          {
+            "node": "إرجاع لوحة trans",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "هل trans يرسل قرار؟": {
+      "main": [
+        [
+          {
+            "node": "البحث عن طلب بالرقم",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "عملية trans غير صالحة",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "عملية trans غير صالحة": {
+      "main": [
+        [
+          {
+            "node": "إرجاع خطأ trans",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "البحث عن طلب بالرقم": {
+      "main": [
+        [
+          {
+            "node": "تجهيز قرار trans",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "تجهيز قرار trans": {
+      "main": [
+        [
+          {
+            "node": "هل قرار trans صالح؟",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "هل قرار trans صالح؟": {
+      "main": [
+        [
+          {
+            "node": "هل القرار اعتماد؟",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "رد قرار trans غير صالح",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "رد قرار trans غير صالح": {
+      "main": [
+        [
+          {
+            "node": "إرجاع خطأ قرار trans",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "هل القرار اعتماد؟": {
+      "main": [
+        [
+          {
+            "node": "قراءة الطالب قبل الاعتماد",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "تحديث الطلب - رفض",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "تحديث الطلب - رفض": {
+      "main": [
+        [
+          {
+            "node": "نجاح رفض الطلب",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "نجاح رفض الطلب": {
+      "main": [
+        [
+          {
+            "node": "إرجاع نجاح الرفض",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "قراءة الطالب قبل الاعتماد": {
+      "main": [
+        [
+          {
+            "node": "التحقق قبل اعتماد النقل",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "التحقق قبل اعتماد النقل": {
+      "main": [
+        [
+          {
+            "node": "هل يمكن اعتماد النقل الآن؟",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "هل يمكن اعتماد النقل الآن؟": {
+      "main": [
+        [
+          {
+            "node": "تحديث فصل الطالب",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "رد تعذر الاعتماد",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "رد تعذر الاعتماد": {
+      "main": [
+        [
+          {
+            "node": "إرجاع تعذر الاعتماد",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "تحديث فصل الطالب": {
+      "main": [
+        [
+          {
+            "node": "تحديث الطلب - اعتماد",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "تحديث الطلب - اعتماد": {
+      "main": [
+        [
+          {
+            "node": "نجاح اعتماد النقل",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "نجاح اعتماد النقل": {
+      "main": [
+        [
+          {
+            "node": "إرجاع نجاح الاعتماد",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook - CORS trans": {
+      "main": [
+        [
+          {
+            "node": "رد CORS trans",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "3fc468c4-4522-4dc5-944f-80903a229084",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  }
+}
