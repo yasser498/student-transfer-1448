@@ -68,7 +68,16 @@
   function renderCards(g) {
     $("#classGrid").innerHTML = Object.values(g.classes)
       .sort((a, b) => Number(a.classNo) - Number(b.classNo))
-      .map(c => `
+      .map(c => {
+        const isFull = !c.excluded && Number(c.count) >= Number(c.target);
+        const vacancies = Math.max(0, Number(c.target) - Number(c.count));
+        const capStatusHtml = c.excluded 
+          ? '<span style="font-size:10px;padding:2px 8px;border-radius:999px;background:#fef3c7;color:#92400e;font-weight:800">مستبعد</span>' 
+          : isFull 
+            ? '<span style="font-size:10px;padding:2px 8px;border-radius:999px;background:#fee2e2;color:#b91c1c;font-weight:800">🔒 مكتمل الطاقة</span>' 
+            : `<span style="font-size:10px;padding:2px 8px;border-radius:999px;background:#d1fae5;color:#047857;font-weight:800">🟢 شواغر: ${vacancies}</span>`;
+
+        return `
         <article class="class-card ${!c.available ? "closed" : ""} ${c.excluded ? "excluded" : ""}" 
                  data-key="${c.key}" 
                  data-grade="${g.code}" 
@@ -80,6 +89,7 @@
             <div class="class-no">
               الشعبة
               <b>الفصل ${c.classNo}</b>
+              <div style="margin-top:4px">${capStatusHtml}</div>
             </div>
             <div class="count-box">
               <strong>${A.num(c.count)}</strong>
@@ -144,7 +154,8 @@
             </button>
           </div>
         </article>
-      `).join("");
+        `;
+      }).join("");
 
     all(".class-card").forEach(card => {
       card.querySelectorAll("input").forEach(x => x.addEventListener("input", () => changed(card)));

@@ -1,5 +1,5 @@
 // Vercel Serverless Function: /api/portal-status
-let memoryState = { locked: false, updatedAt: new Date().toISOString() };
+let memoryState = { locked: false, autoCapLock: true, updatedAt: new Date().toISOString() };
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -13,8 +13,9 @@ export default async function handler(req, res) {
   if (req.method === 'POST') {
     try {
       const data = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
-      const isLocked = Boolean(data.locked);
-      memoryState = { locked: isLocked, updatedAt: new Date().toISOString() };
+      if (typeof data.locked === 'boolean') memoryState.locked = data.locked;
+      if (typeof data.autoCapLock === 'boolean') memoryState.autoCapLock = data.autoCapLock;
+      memoryState.updatedAt = new Date().toISOString();
       return res.status(200).json({ success: true, ...memoryState });
     } catch (e) {
       return res.status(400).json({ success: false, message: 'Invalid JSON' });
