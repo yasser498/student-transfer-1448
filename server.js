@@ -4,6 +4,7 @@ const path = require('path');
 
 const PORT = process.env.PORT || 3000;
 const PUBLIC_DIR = path.resolve(__dirname);
+const STATE_FILE = path.join(PUBLIC_DIR, 'portal-state.json');
 
 const MIME_TYPES = {
   '.html': 'text/html; charset=utf-8',
@@ -21,9 +22,64 @@ const MIME_TYPES = {
   '.csv': 'text/csv; charset=utf-8'
 };
 
+function getPortalState() {
+  try {
+    if (fs.existsSync(STATE_FILE)) {
+      return JSON.parse(fs.readFileSync(STATE_FILE, 'utf8'));
+    }
+  } catch (e) {}
+  return { locked: false };
+}
+
+function setPortalState(state) {
+  try {
+    fs.writeFileSync(STATE_FILE, JSON.stringify(state, null, 2), 'utf8');
+  } catch (e) {}
+}
+
 const server = http.createServer((req, res) => {
-  let reqUrl = req.url.split('?')[0];
-  let filePath = path.join(PUBLIC_DIR, reqUrl);
+  const parsedUrl = req.url.split('?')[0];
+
+  // API Endpoint: /api/portal-status
+  if (parsedUrl === '/api/portal-status') {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-Admin-Key');
+
+    if (req.method === 'OPTIONS') {
+      res.writeHead(204);
+      res.end();
+      return;
+    }
+
+    if (req.method === 'GET') {
+      const state = getPortalState();
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({ success: true, ...state }));
+      return;
+    }
+
+    if (req.method === 'POST') {
+      let body = '';
+      req.on('data', chunk => body += chunk);
+      req.on('end', () => {
+        try {
+          const data = JSON.parse(body || '{}');
+          const isLocked = Boolean(data.locked);
+          const state = { locked: isLocked, updatedAt: new Date().toISOString() };
+          setPortalState(state);
+          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+          res.end(JSON.stringify({ success: true, ...state }));
+        } catch (e) {
+          res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
+          res.end(JSON.stringify({ success: false, message: 'Invalid JSON' }));
+        }
+      });
+      return;
+    }
+  }
+
+  let filePath = path.join(PUBLIC_DIR, parsedUrl);
 
   // If directory, try index.html
   if (fs.existsSync(filePath) && fs.statSync(filePath).isDirectory()) {

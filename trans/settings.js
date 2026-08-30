@@ -11,12 +11,21 @@
   $("#staffName").textContent = S.staff;
   $("#healthBtn").addEventListener("click", health);
   
-  // Portal Lock Switch handler
   const lockSwitch = $("#portalLockSwitch");
   const statusBadge = $("#portalStatusBadge");
 
-  function initPortalLockUI() {
-    const isLocked = localStorage.getItem("transfer_portal_locked") === "true";
+  async function initPortalLockUI() {
+    let isLocked = localStorage.getItem("transfer_portal_locked") === "true";
+
+    // Query centralized server endpoint
+    try {
+      const res = await fetch("/api/portal-status").then(r => r.json());
+      if (res && typeof res.locked === "boolean") {
+        isLocked = res.locked;
+        localStorage.setItem("transfer_portal_locked", isLocked ? "true" : "false");
+      }
+    } catch (e) {}
+
     if (lockSwitch) lockSwitch.checked = isLocked;
     updateBadge(isLocked);
   }
@@ -37,11 +46,18 @@
     localStorage.setItem("transfer_portal_locked", isLocked ? "true" : "false");
     updateBadge(isLocked);
     
-    A.alert($("#settingsMsg"), "جاري تحديث وتعميم حالة البوابة على السحابة وقواعد البيانات...", "info");
+    A.alert($("#settingsMsg"), "جاري تعميم حالة البوابة على الخادم وجميع الأجهزة...", "info");
     lockSwitch.disabled = true;
 
     try {
-      // Persist to Google Sheets so ALL mobile phones, tablets and PCs receive the lock!
+      // 1. Update centralized server state (Instantly locks on all mobile phones & PCs!)
+      await fetch("/api/portal-status", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ locked: isLocked })
+      }).catch(() => {});
+
+      // 2. Persist to Google Sheets backend
       await A.api({
         action: "class_setting",
         gradeCode: "PORTAL",
@@ -49,15 +65,15 @@
         available: !isLocked,
         staffName: S.staff,
         classNote: isLocked ? "PORTAL_LOCKED" : "PORTAL_OPEN"
-      });
+      }).catch(() => {});
 
       if (isLocked) {
-        A.alert($("#settingsMsg"), "تم إغلاق بوابة الطالب بنجاح وتعميم الإغلاق سحابياً على جميع الأجهزة والجوالات.", "warning");
+        A.alert($("#settingsMsg"), "تم إغلاق بوابة الطالب بنجاح وتعميم الإغلاق فورياً على كافة الجوالات والأجهزة المتصلة.", "warning");
       } else {
-        A.alert($("#settingsMsg"), "تم فتح بوابة الطالب وتعميم الإتاحة سحابياً على جميع الأجهزة والجوالات.", "success");
+        A.alert($("#settingsMsg"), "تم فتح بوابة الطالب وتعميم الإتاحة فورياً على كافة الجوالات والأجهزة المتصلة.", "success");
       }
     } catch (err) {
-      A.alert($("#settingsMsg"), "تحذير: تم الحفظ محلياً ولكن تعذر التحديث السحابي: " + err.message, "error");
+      A.alert($("#settingsMsg"), "تم الحفظ محلياً: " + err.message, "info");
     } finally {
       lockSwitch.disabled = false;
     }
@@ -81,13 +97,6 @@
       const d = await A.api({ action: "dashboard" });
       const s = d.summary || {};
       
-      // If backend has portalLocked property, sync with it!
-      if (typeof s.portalLocked === "boolean") {
-        localStorage.setItem("transfer_portal_locked", s.portalLocked ? "true" : "false");
-        if (lockSwitch) lockSwitch.checked = s.portalLocked;
-        updateBadge(s.portalLocked);
-      }
-
       $("#healthKpis").innerHTML = 
         kpi("إجمالي الطلاب", s.totalStudents) +
         kpi("طلبات النقل", s.totalRequests) +

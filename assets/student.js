@@ -30,22 +30,40 @@
   }
 
   // Check Portal Lock State
-  function checkPortalLock() {
-    const isLocked = localStorage.getItem("transfer_portal_locked") === "true";
+  async function checkPortalLock() {
+    let isLocked = localStorage.getItem("transfer_portal_locked") === "true";
+    
+    // Apply immediate local state first
+    applyLockUI(isLocked);
+
+    // Asynchronously fetch centralized state (syncs with Mobile & all devices in real-time)
+    try {
+      const res = await fetch("/api/portal-status").then(r => r.json());
+      if (res && typeof res.locked === "boolean") {
+        isLocked = res.locked;
+        localStorage.setItem("transfer_portal_locked", isLocked ? "true" : "false");
+        applyLockUI(isLocked);
+      }
+    } catch (e) {}
+  }
+
+  function applyLockUI(isLocked) {
     const lockView = $("#lockView");
     const newView = $("#newView");
     const livePill = document.querySelector(".live-pill");
+    const isNewTabActive = document.querySelector('.portal-tab[data-tab="new"]')?.classList.contains("active");
 
     if (isLocked) {
-      lockView?.classList.remove("hidden");
-      newView?.classList.add("hidden");
+      if (isNewTabActive) {
+        lockView?.classList.remove("hidden");
+        newView?.classList.add("hidden");
+      }
       if (livePill) {
         livePill.innerHTML = `<span class="live-dot" style="background:#ef4444;box-shadow:0 0 0 4px rgba(239,68,68,0.25)"></span> الخدمة مغلقة مؤقتاً`;
         livePill.style.borderColor = "rgba(239, 68, 68, 0.4)";
       }
     } else {
       lockView?.classList.add("hidden");
-      const isNewTabActive = document.querySelector('.portal-tab[data-tab="new"]')?.classList.contains("active");
       if (isNewTabActive) {
         newView?.classList.remove("hidden");
       }
