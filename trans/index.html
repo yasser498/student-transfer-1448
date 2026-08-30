@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#082830">
+  <title>لوحة التحكم | إدارة نقل الطلاب والموازنة</title>
+  <link rel="stylesheet" href="/trans/admin.css?v=2.2.0">
+</head>
+<body>
+
+<!-- Login Overlay -->
+<div id="loginOverlay" class="login-overlay">
+  <form id="loginForm" class="login-card">
+    <img class="login-logo" src="/assets/moe-logo.png" alt="وزارة التعليم">
+    <span class="trans-tag">بوابة الإدارة المركزية</span>
+    <h1>مدرسة عماد الدين زنكي المتوسطة</h1>
+    <p>لوحة إدارة ومتابعة طلبات نقل الطلاب والموازنة الذكية بين الفصول</p>
+    
+    <div class="field">
+      <label for="keyInput">مفتاح الوصول السري</label>
+      <input id="keyInput" type="password" required placeholder="أدخل مفتاح الدخول">
+    </div>
+    <div class="field">
+      <label for="staffInput">اسم الموظف / المسؤول</label>
+      <input id="staffInput" required placeholder="مثال: أ. محمد العتيبي">
+    </div>
+    
+    <div id="loginMsg" class="alert hidden"></div>
+    
+    <button class="btn btn-primary" style="width:100%;margin-top:18px" type="submit">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+      تسجيل الدخول إلى النظام
+    </button>
+  </form>
+</div>
+
+<!-- Admin Main App -->
+<div id="appShell" class="admin-shell">
+  <main class="main">
+    <div class="content">
+      
+      <!-- Top Page Header -->
+      <div class="page-head">
+        <div>
+          <span class="eyebrow">نظام الموازنة الحية</span>
+          <h2>نظرة شاملة على الفصول وطلبات النقل</h2>
+          <p>متابعة التوزيع العددي اللحظي ودراسة واعتماد طلبات نقل الطلاب.</p>
+        </div>
+        <div class="toolbar">
+          <button id="refreshBtn" class="btn btn-soft">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+            تحديث البيانات
+          </button>
+          <a class="btn btn-dark" href="/trans/sync.html">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            مزامنة إكسل
+          </a>
+          <a class="btn btn-primary" href="/trans/report.html">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            التقرير النهائي
+          </a>
+        </div>
+      </div>
+
+      <div id="pageMsg" class="alert hidden"></div>
+
+      <!-- KPI Summary Cards -->
+      <section id="kpis" class="kpi-grid"></section>
+
+      <!-- Grade Balance & Capacities -->
+      <section class="card">
+        <div class="card-head">
+          <div>
+            <h3>أعداد الطلاب والطاقة الاستيعابية حسب الفصول</h3>
+            <p>المستهدف يُحسب آلياً بناءً على موازنة الطلاب والفصول المستبعدة أو الأهداف اليدوية.</p>
+          </div>
+          <div id="gradeTabs" class="grade-tabs"></div>
+        </div>
+        <div class="card-body">
+          <div id="balanceGrid" class="balance-grid"></div>
+        </div>
+      </section>
+
+      <!-- Transfer Requests Table -->
+      <section class="card">
+        <div class="card-head">
+          <div>
+            <h3>طلبات النقل الواردة</h3>
+            <p>اعتماد الطلب يقوم بتحديث فصل الطالب مباشرة في سجلات المدرسة.</p>
+          </div>
+          <div class="toolbar">
+            <select id="statusFilter" class="control">
+              <option value="قيد المراجعة">قيد المراجعة فقط</option>
+              <option value="الكل">جميع الطلبات</option>
+              <option value="مقبول">المقبولة</option>
+              <option value="مرفوض">المرفوضة</option>
+            </select>
+            <input id="searchInput" class="control" placeholder="بحث باسم الطالب أو رقم الهوية أو الطلب...">
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>رقم الطلب والتاريخ</th>
+                <th>اسم وسجل الطالب</th>
+                <th>الصف</th>
+                <th>مسار النقل المطلوب</th>
+                <th>سبب الطلب</th>
+                <th>مؤشر الموازنة</th>
+                <th>حالة الطلب</th>
+                <th>الإجراء والقرار</th>
+              </tr>
+            </thead>
+            <tbody id="requestsBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+    </div>
+  </main>
+</div>
+
+<!-- Decision Modal -->
+<div id="decisionModal" class="modal hidden">
+  <div class="modal-card">
+    <div class="modal-head">
+      <h3 id="decisionTitle">قرار لجنة دراسة الطلب</h3>
+    </div>
+    <div class="modal-body">
+      <div id="decisionInfo" style="margin-bottom:16px"></div>
+      <div class="field">
+        <label for="decisionNote">ملاحظة الإدارة / مسوغ القرار (تظهر للطالب في الاستعلام)</label>
+        <textarea id="decisionNote" class="control" rows="3" placeholder="اكتب ملاحظة أو توجيه إن وجد..."></textarea>
+      </div>
+      <div id="decisionMsg" class="alert hidden"></div>
+    </div>
+    <div class="modal-foot">
+      <button id="cancelDecision" class="btn btn-soft">إلغاء</button>
+      <button id="rejectDecision" class="btn btn-danger">رفض الطلب</button>
+      <button id="approvePairBtn" class="btn btn-warning hidden">🔄 اعتماد التبادل للطالبين معاً</button>
+      <button id="approveDecision" class="btn btn-primary">اعتماد هذا النقل فقط</button>
+    </div>
+  </div>
+</div>
+
+<script src="/assets/config.js?v=2.2.0"></script>
+<script src="/trans/common.js?v=2.2.0"></script>
+<script src="/trans/dashboard.js?v=2.2.0"></script>
+</body>
+</html>
