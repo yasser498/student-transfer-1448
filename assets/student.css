@@ -1227,6 +1227,28 @@ textarea.control {
   line-height: 1.6;
 }
 
+.decision-banner.rejected {
+  background: linear-gradient(135deg, #fff1f2 0%, #ffe4e6 100%);
+  border: 1.5px solid #fecdd3;
+  color: #9f1239;
+  box-shadow: 0 4px 14px rgba(225, 29, 72, 0.06);
+}
+
+.decision-banner.rejected h4 {
+  font-size: 15.5px;
+  font-weight: 900;
+  color: #9f1239;
+  margin-bottom: 3px;
+}
+
+.decision-banner.rejected p {
+  font-size: 13px;
+  color: #be123c;
+  margin: 0;
+  line-height: 1.6;
+  font-weight: 600;
+}
+
 .decision-icon {
   font-size: 32px;
   line-height: 1;
@@ -1353,6 +1375,21 @@ textarea.control {
   background: #eab308;
 }
 
+.request-card.card-rejected {
+  border-color: #fca5a5;
+  background: linear-gradient(180deg, #ffffff 0%, #fffafa 100%);
+}
+
+.request-card.card-rejected::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: #ef4444;
+}
+
 .request-card-head {
   display: flex;
   justify-content: space-between;
@@ -1423,5 +1460,42 @@ textarea.control {
   font-size: 12.5px;
   color: var(--navy-800);
   margin-top: 12px;
+}
+
+.attendance-notice-box {
+  background: linear-gradient(135deg, #ecfdf5 0%, #f0fdf4 100%);
+  border: 1.5px solid #a7f3d0;
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.08);
+}
+
+.attendance-notice-icon {
+  font-size: 22px;
+  flex: 0 0 28px;
+  text-align: center;
+}
+
+.attendance-notice-text {
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: #065f46;
+}
+
+.attendance-notice-text strong {
+  display: block;
+  font-size: 13px;
+  font-weight: 900;
+  color: #047857;
+  margin-bottom: 2px;
+}
+
+.attendance-notice-text span {
+  font-weight: 700;
+  color: #065f46;
 }
 

@@ -253,6 +253,19 @@
       $("#approvePairBtn")?.classList.add("hidden");
     }
 
+    const g = DATA.classManagement ? DATA.classManagement[r.grade] : null;
+    const fromClassObj = g && g.classes ? g.classes[r.fromClass] : null;
+    const toClassObj = g && g.classes ? g.classes[r.toClass] : null;
+
+    const fromCountCurrent = fromClassObj ? fromClassObj.count : (Number(r.fromClassCount) || 0);
+    const toCountCurrent = toClassObj ? toClassObj.count : (Number(r.toClassCount) || 0);
+
+    const fromCountAfter = Math.max(0, fromCountCurrent - 1);
+    const toCountAfter = toCountCurrent + 1;
+
+    const fromTarget = fromClassObj ? fromClassObj.target : "—";
+    const toTarget = toClassObj ? toClassObj.target : "—";
+
     $("#decisionInfo").innerHTML = `
       <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:14px;padding:14px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
@@ -265,6 +278,30 @@
         <div style="font-size:12px;color:var(--text-muted);margin-top:6px">
           سبب الطلب: ${A.esc(r.reason)} ${r.note ? `(${A.esc(r.note)})` : ""}
         </div>
+
+        <div style="background:#f0fdf4;border:1.5px solid #a7f3d0;border-radius:12px;padding:12px 14px;margin-top:12px">
+          <div style="font-size:12px;font-weight:900;color:#065f46;margin-bottom:8px">
+            📊 أثر الاعتماد اللحظي على أعداد الفصول (وفق أحدث البيانات):
+          </div>
+          <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center">
+            <div style="background:#ffffff;border:1px solid #cbd5e1;border-radius:8px;padding:8px 10px;text-align:center">
+              <div style="font-size:11px;color:var(--text-muted);font-weight:700">الفصل السابق (${A.esc(r.fromClass)})</div>
+              <div style="font-size:13px;font-weight:900;color:#1e293b;margin-top:2px">
+                <span>${A.num(fromCountCurrent)}</span> ← <b style="color:#b91c1c">${A.num(fromCountAfter)} طالب</b>
+              </div>
+              <small style="font-size:10px;color:#64748b">الهدف: ${A.num(fromTarget)}</small>
+            </div>
+            <div style="font-size:16px;font-weight:900;color:var(--primary)">←</div>
+            <div style="background:#ffffff;border:1.5px solid #86efac;border-radius:8px;padding:8px 10px;text-align:center">
+              <div style="font-size:11px;color:#047857;font-weight:700">الفصل المطلوب (${A.esc(r.toClass)})</div>
+              <div style="font-size:13px;font-weight:900;color:#047857;margin-top:2px">
+                <span>${A.num(toCountCurrent)}</span> ← <b style="color:#047857;font-size:14.5px">${A.num(toCountAfter)} طالب</b>
+              </div>
+              <small style="font-size:10px;color:#047857">الهدف: ${A.num(toTarget)}</small>
+            </div>
+          </div>
+        </div>
+
         ${swapNotice}
       </div>
     `;

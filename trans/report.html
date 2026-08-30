@@ -102,15 +102,15 @@
             <table class="report-table">
               <thead>
                 <tr>
-                  <th style="width:70px">رقم الطلب</th>
-                  <th>اسم وسجل الطالب</th>
+                  <th style="width:110px">رقم الطلب</th>
+                  <th class="col-name">اسم وسجل الطالب</th>
                   <th style="width:90px">الصف</th>
-                  <th style="width:130px">مسار النقل</th>
-                  <th>سبب الطلب</th>
-                  <th style="width:100px">أثر الموازنة</th>
-                  <th style="width:85px">الحالة</th>
-                  <th style="width:90px">تاريخ القرار</th>
-                  <th style="width:100px">المعتمد</th>
+                  <th style="width:110px">مسار النقل</th>
+                  <th class="col-reason">سبب الطلب</th>
+                  <th style="width:95px">أثر الموازنة</th>
+                  <th style="width:75px">الحالة</th>
+                  <th style="width:95px">تاريخ القرار</th>
+                  <th style="width:95px">المعتمد</th>
                 </tr>
               </thead>
               <tbody id="reportRows"></tbody>
@@ -122,17 +122,17 @@
         <div class="official-signatures">
           <div class="sig-box">
             <span class="sig-role">مُعد التقرير</span>
-            <span class="sig-name" id="signName">—</span>
+            <span class="sig-name" id="signName">ياسر الحميدي</span>
             <div class="sig-line">التوقيع: .................................</div>
           </div>
           <div class="sig-box">
             <span class="sig-role">وكيل شؤون الطلاب</span>
-            <span class="sig-name">أ. .................................</span>
+            <span class="sig-name">أ. محمد علي الحجيلي</span>
             <div class="sig-line">التوقيع: .................................</div>
           </div>
           <div class="sig-box">
             <span class="sig-role">مدير المدرسة</span>
-            <span class="sig-name">أ. .................................</span>
+            <span class="sig-name">أ. عابد عبيد الجدعاني</span>
             <div class="sig-line">الختم والتوقيع: ........................</div>
           </div>
         </div>
@@ -141,44 +141,6 @@
 
     </div>
   </main>
-</div>
-
-<!-- Dedicated Modal for Noor Printable Sheet -->
-<div id="noorPrintModal" class="modal hidden">
-  <div class="modal-card" style="width:min(900px, 98vw);max-height:92vh;overflow-y:auto">
-    <div class="modal-head no-print" style="display:flex;justify-content:space-between;align-items:center">
-      <h3>كشف تعديل فصول الطلاب المعتمد (نظام نور)</h3>
-      <div class="toolbar">
-        <button id="triggerPrintNoor" class="btn btn-primary">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-          طباعة الكشف الآن
-        </button>
-        <button id="closeNoorModal" class="btn btn-soft">إغلاق</button>
-      </div>
-    </div>
-    <div class="modal-body" id="noorPrintContent" style="padding:24px">
-      <!-- Injected via JS with official Noor print sheet -->
-    </div>
-  </div>
-</div>
-
-<!-- Dedicated Modal for All Transfer Requests Printable Register -->
-<div id="requestsPrintModal" class="modal hidden">
-  <div class="modal-card" style="width:min(940px, 98vw);max-height:92vh;overflow-y:auto">
-    <div class="modal-head no-print" style="display:flex;justify-content:space-between;align-items:center">
-      <h3>السجل الشامل لطلبات النقل والقرارات الصادرة</h3>
-      <div class="toolbar">
-        <button id="triggerPrintRequests" class="btn btn-primary">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-          طباعة السجل الآن
-        </button>
-        <button id="closeRequestsModal" class="btn btn-soft">إغلاق</button>
-      </div>
-    </div>
-    <div class="modal-body" id="requestsPrintContent" style="padding:24px">
-      <!-- Injected via JS with official Requests register sheet -->
-    </div>
-  </div>
 </div>
 
 <script src="/assets/xlsx.full.min.js"></script>
