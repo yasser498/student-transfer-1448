@@ -3,5 +3,5 @@ window.APP_CONFIG = Object.freeze({
   academicYear: '1448هـ',
   studentApi: 'https://n8n.yasergrid.online/webhook/student-transfer-1448-v1',
   adminApi: 'https://n8n.yasergrid.online/webhook/student-transfer-1448-trans-v1',
-  version: '2.1.0'
+  version: '2.2.0'
 });

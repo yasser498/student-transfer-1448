@@ -1,8 +1,61 @@
-<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>إدارة الفصول | trans</title><link rel="stylesheet" href="/trans/admin.css?v=2.1.0"></head><body>
-<div id="appShell" class="admin-shell"><main class="main"><div class="content">
- <div class="page-head"><div><span class="eyebrow">إدارة الفصول</span><h2>إتاحة النقل والموازنة</h2><p>العدد الحالي يُحسب تلقائيًا من بيانات الطلاب؛ أنت تتحكم في الإتاحة والاستبعاد والهدف.</p></div><div class="toolbar"><button id="autoBtn" class="btn btn-soft">تطبيق الأهداف المقترحة</button><button id="saveAllBtn" class="btn btn-primary">حفظ جميع التعديلات</button></div></div>
- <div id="pageMsg" class="alert hidden"></div>
- <section class="card"><div class="card-head"><div><h3>اختر الصف</h3><p>إغلاق الفصل عن استقبال النقل يخفيه مباشرة من موقع الطالب.</p></div><div id="gradeTabs" class="grade-tabs"></div></div><div class="card-body"><div id="summary" class="kpi-grid" style="margin:0"></div></div></section>
- <section id="classGrid" class="class-grid"></section>
-</div></main></div>
-<script src="/assets/config.js?v=2.1.0"></script><script src="/trans/common.js?v=2.1.0"></script><script src="/trans/classes.js?v=2.1.0"></script></body></html>
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#082830">
+  <title>إدارة الفصول والطاقة الاستيعابية | trans</title>
+  <link rel="stylesheet" href="/trans/admin.css?v=2.2.0">
+</head>
+<body>
+<div id="appShell" class="admin-shell">
+  <main class="main">
+    <div class="content">
+      
+      <!-- Page Head -->
+      <div class="page-head">
+        <div>
+          <span class="eyebrow">الطاقة الاستيعابية والموازنة</span>
+          <h2>إدارة الشعب وإتاحة استقبال النقل</h2>
+          <p>التحكم في إتاحة الفصول للطلاب، استبعاد الشعب الخاصة، وتحديد المستهدفات الاستيعابية.</p>
+        </div>
+        <div class="toolbar">
+          <button id="autoBtn" class="btn btn-soft">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+            تطبيق الأهداف المقترحة آلياً
+          </button>
+          <button id="saveAllBtn" class="btn btn-primary">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            حفظ جميع التعديلات
+          </button>
+        </div>
+      </div>
+
+      <div id="pageMsg" class="alert hidden"></div>
+
+      <!-- Grade Selector & Summary -->
+      <section class="card">
+        <div class="card-head">
+          <div>
+            <h3>اختر الصف الدراسي</h3>
+            <p>إيقاف إتاحة الفصل يخفيه مباشرة ولحظياً من خيارات الطلاب في البوابة.</p>
+          </div>
+          <div id="gradeTabs" class="grade-tabs"></div>
+        </div>
+        <div class="card-body">
+          <div id="summary" class="kpi-grid" style="margin:0"></div>
+        </div>
+      </section>
+
+      <!-- Classes Dynamic Cards -->
+      <section id="classGrid" class="class-grid"></section>
+
+    </div>
+  </main>
+</div>
+
+<script src="/assets/config.js?v=2.2.0"></script>
+<script src="/trans/common.js?v=2.2.0"></script>
+<script src="/trans/classes.js?v=2.2.0"></script>
+</body>
+</html>
