@@ -212,7 +212,13 @@
     } catch (e) {
       current = null;
       $("#studentPanel").classList.add("hidden");
-      show($("#lookupMsg"), e.message, "error");
+
+      if (e.message && (e.message.includes("مغلقة") || e.message.includes("قريباً"))) {
+        localStorage.setItem("transfer_portal_locked", "true");
+        checkPortalLock();
+      } else {
+        show($("#lookupMsg"), e.message, "error");
+      }
     } finally {
       $("#lookupBtn").disabled = false;
     }

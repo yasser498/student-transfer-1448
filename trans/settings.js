@@ -24,7 +24,7 @@
   function updateBadge(isLocked) {
     if (!statusBadge) return;
     if (isLocked) {
-      statusBadge.textContent = "🔴 البوابة مغلقة مؤقتاً (شاشة الانتظار معروضة للطلاب)";
+      statusBadge.textContent = "🔴 البوابة مغلقة مؤقتاً (شاشة الانتظار معروضة للطلاب على كافة الأجهزة)";
       statusBadge.className = "badge bad";
     } else {
       statusBadge.textContent = "🟢 البوابة مفتوحة لاستقبال طلبات الطلاب";
@@ -32,15 +32,34 @@
     }
   }
 
-  lockSwitch?.addEventListener("change", () => {
+  lockSwitch?.addEventListener("change", async () => {
     const isLocked = lockSwitch.checked;
     localStorage.setItem("transfer_portal_locked", isLocked ? "true" : "false");
     updateBadge(isLocked);
     
-    if (isLocked) {
-      A.alert($("#settingsMsg"), "تم إغلاق بوابة الطالب مؤقتاً بنجاح. ستظهر للطلاب شاشة بلورية عائمة بعبارة «سوف يُتاح الموقع قريباً للنقل».", "warning");
-    } else {
-      A.alert($("#settingsMsg"), "تم فتح وتفعيل بوابة الطالب لاستقبال طلبات النقل بنجاح.", "success");
+    A.alert($("#settingsMsg"), "جاري تحديث وتعميم حالة البوابة على السحابة وقواعد البيانات...", "info");
+    lockSwitch.disabled = true;
+
+    try {
+      // Persist to Google Sheets so ALL mobile phones, tablets and PCs receive the lock!
+      await A.api({
+        action: "class_setting",
+        gradeCode: "PORTAL",
+        classNo: "STATUS",
+        available: !isLocked,
+        staffName: S.staff,
+        classNote: isLocked ? "PORTAL_LOCKED" : "PORTAL_OPEN"
+      });
+
+      if (isLocked) {
+        A.alert($("#settingsMsg"), "تم إغلاق بوابة الطالب بنجاح وتعميم الإغلاق سحابياً على جميع الأجهزة والجوالات.", "warning");
+      } else {
+        A.alert($("#settingsMsg"), "تم فتح بوابة الطالب وتعميم الإتاحة سحابياً على جميع الأجهزة والجوالات.", "success");
+      }
+    } catch (err) {
+      A.alert($("#settingsMsg"), "تحذير: تم الحفظ محلياً ولكن تعذر التحديث السحابي: " + err.message, "error");
+    } finally {
+      lockSwitch.disabled = false;
     }
   });
 
@@ -62,6 +81,13 @@
       const d = await A.api({ action: "dashboard" });
       const s = d.summary || {};
       
+      // If backend has portalLocked property, sync with it!
+      if (typeof s.portalLocked === "boolean") {
+        localStorage.setItem("transfer_portal_locked", s.portalLocked ? "true" : "false");
+        if (lockSwitch) lockSwitch.checked = s.portalLocked;
+        updateBadge(s.portalLocked);
+      }
+
       $("#healthKpis").innerHTML = 
         kpi("إجمالي الطلاب", s.totalStudents) +
         kpi("طلبات النقل", s.totalRequests) +
