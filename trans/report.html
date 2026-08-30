@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#082830">
-  <title>التقرير النهائي المعتمد | نقل الطلاب والموازنة</title>
-  <link rel="stylesheet" href="/trans/admin.css?v=2.2.0">
+  <title>التقرير النهائي المعتمد | كليشة رسمية وطباعة نور</title>
+  <link rel="stylesheet" href="/trans/admin.css?v=2.4.0">
 </head>
 <body>
 <div id="appShell" class="admin-shell">
@@ -15,18 +15,26 @@
       <!-- Top Action Bar (hidden on print) -->
       <div class="page-head no-print">
         <div>
-          <span class="eyebrow">التقارير الرسمية</span>
-          <h2>التقرير النهائي الشامل للموازنة والطلبات</h2>
-          <p>تقرير إحصائي معتمد لحركة الطلاب ونتائج الموازنة وقرارات النقل.</p>
+          <span class="eyebrow">التقارير الرسمية والاعتماد</span>
+          <h2>التقرير النهائي الشامل للموازنة ونظام نور</h2>
+          <p>كليشة رسمية معتمدة قابلة للطباعة وتصدير PDF مباشرة وفق المعايير الوزارية.</p>
         </div>
         <div class="toolbar">
           <button id="refreshBtn" class="btn btn-soft">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
             تحديث
           </button>
-          <button id="noorActionBtn" class="btn btn-warning">
+          <button id="printRequestsSheetBtn" class="btn btn-soft">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+            طباعة سجل قرارات النقل
+          </button>
+          <button id="printNoorSheetBtn" class="btn btn-warning">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+            طباعة كشف تعديلات نور
+          </button>
+          <button id="noorActionBtn" class="btn btn-soft">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-            كشف التعديل لنظام نور
+            تصدير كشف نور (Excel)
           </button>
           <button id="csvBtn" class="btn btn-soft">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -34,64 +42,75 @@
           </button>
           <button id="printBtn" class="btn btn-primary">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-            طباعة / تصدير PDF
+            طباعة التقرير الشامل
           </button>
         </div>
       </div>
 
       <div id="reportMsg" class="alert hidden no-print"></div>
 
-      <!-- Printable Report Sheet -->
-      <article class="report-page card" style="padding:32px">
-        <header class="report-header">
-          <img src="/assets/moe-logo.png" alt="وزارة التعليم">
-          <div class="report-title">
-            <h1>مدرسة عماد الدين زنكي المتوسطة</h1>
-            <p>التقرير النهائي لطلبات نقل الطلاب والموازنة بين الفصول</p>
-            <b style="color:var(--primary)">العام الدراسي 1448هـ</b>
+      <!-- Printable Report Sheet with Official Saudi Letterhead -->
+      <article class="report-page card">
+        
+        <!-- Official Saudi Letterhead (الكليشة الرسمية) -->
+        <header class="official-letterhead">
+          <div class="letterhead-side right">
+            <div class="org-line">المملكة العربية السعودية</div>
+            <div class="org-line">وزارة التعليم</div>
+            <div class="org-line">الإدارة العامة للتعليم</div>
+            <div class="org-line school-name">مدرسة عماد الدين زنكي المتوسطة</div>
           </div>
-          <div class="report-meta">
-            <span>تاريخ وتوقيت التقرير:</span>
-            <b id="generatedAt">—</b>
-            <span style="margin-top:6px">المعد بواسطة:</span>
-            <b id="preparedBy">—</b>
+          
+          <div class="letterhead-center">
+            <img src="/assets/moe-logo.png" alt="وزارة التعليم" class="official-moe-logo">
+            <h1 class="report-main-heading">تقرير حركة نقل الطلاب والموازنة بين الفصول</h1>
+            <div class="report-year-badge">العام الدراسي 1448هـ</div>
+          </div>
+          
+          <div class="letterhead-side left">
+            <div class="meta-row"><span>الرقم:</span> <b>1448/ن/م</b></div>
+            <div class="meta-row"><span>التاريخ:</span> <b id="generatedAtDate">—</b></div>
+            <div class="meta-row"><span>الوقت:</span> <b id="generatedAtTime">—</b></div>
+            <div class="meta-row"><span>المشفوعات:</span> <b>كشف المعتمدين بنور</b></div>
           </div>
         </header>
 
-        <!-- Executive Summary -->
-        <section class="report-section">
-          <h2>1. الملخص التنفيذي والإحصائي</h2>
-          <div id="reportKpis" class="kpi-grid"></div>
+        <div class="official-rule"></div>
+
+        <!-- Section 1: Executive Summary -->
+        <section class="report-block">
+          <h3 class="block-title">أولاً: الملخص الإحصائي العام لحركة الطلاب</h3>
+          <div id="reportKpis" class="report-kpi-row"></div>
         </section>
 
-        <!-- Classes Capacity Breakdown -->
-        <section class="report-section">
-          <h2>2. أعداد الفصول وأهداف الطاقة الاستيعابية</h2>
+        <!-- Section 2: Capacity & Targets -->
+        <section class="report-block">
+          <h3 class="block-title">ثانياً: أعداد الفصول وتوزيع الطاقة الاستيعابية والأهداف المعتمدة</h3>
           <div id="classReports"></div>
         </section>
 
-        <!-- Recommended Rebalancing Plan -->
-        <section class="report-section">
-          <h2>3. خطة الموازنة وإعادة التوزيع المقترحة</h2>
+        <!-- Section 3: Recommended Rebalancing Plan -->
+        <section class="report-block">
+          <h3 class="block-title">ثالثاً: خطة وتوصيات الموازنة بين الشعب</h3>
           <div id="planList" class="plan-list"></div>
         </section>
 
-        <!-- Transfer Decisions Table -->
-        <section class="report-section">
-          <h2>4. سجل طلبات النقل والقرارات المعتمدة</h2>
+        <!-- Section 4: Decisions Table -->
+        <section class="report-block">
+          <h3 class="block-title">رابعاً: السجل الشامل لطلبات النقل والقرارات الصادرة</h3>
           <div class="table-wrap">
-            <table class="table">
+            <table class="report-table">
               <thead>
                 <tr>
-                  <th>رقم الطلب</th>
+                  <th style="width:70px">رقم الطلب</th>
                   <th>اسم وسجل الطالب</th>
-                  <th>الصف</th>
-                  <th>مسار النقل</th>
+                  <th style="width:90px">الصف</th>
+                  <th style="width:130px">مسار النقل</th>
                   <th>سبب الطلب</th>
-                  <th>أثر الموازنة</th>
-                  <th>الحالة</th>
-                  <th>تاريخ القرار</th>
-                  <th>معتمد من</th>
+                  <th style="width:100px">أثر الموازنة</th>
+                  <th style="width:85px">الحالة</th>
+                  <th style="width:90px">تاريخ القرار</th>
+                  <th style="width:100px">المعتمد</th>
                 </tr>
               </thead>
               <tbody id="reportRows"></tbody>
@@ -99,32 +118,72 @@
           </div>
         </section>
 
-        <!-- Official Signatures -->
-        <div class="signatures">
-          <div class="signature">
-            إعداد التقرير
-            <br>
-            <b id="signName" style="display:block;margin-top:6px">—</b>
+        <!-- Section 5: Official Signatures -->
+        <div class="official-signatures">
+          <div class="sig-box">
+            <span class="sig-role">مُعد التقرير</span>
+            <span class="sig-name" id="signName">—</span>
+            <div class="sig-line">التوقيع: .................................</div>
           </div>
-          <div class="signature">
-            وكيل شؤون الطلاب
-            <br><br>
-            ..................................
+          <div class="sig-box">
+            <span class="sig-role">وكيل شؤون الطلاب</span>
+            <span class="sig-name">أ. .................................</span>
+            <div class="sig-line">التوقيع: .................................</div>
           </div>
-          <div class="signature">
-            مدير المدرسة
-            <br><br>
-            ..................................
+          <div class="sig-box">
+            <span class="sig-role">مدير المدرسة</span>
+            <span class="sig-name">أ. .................................</span>
+            <div class="sig-line">الختم والتوقيع: ........................</div>
           </div>
         </div>
+
       </article>
 
     </div>
   </main>
 </div>
 
-<script src="/assets/config.js?v=2.2.0"></script>
-<script src="/trans/common.js?v=2.2.0"></script>
-<script src="/trans/report.js?v=2.2.0"></script>
+<!-- Dedicated Modal for Noor Printable Sheet -->
+<div id="noorPrintModal" class="modal hidden">
+  <div class="modal-card" style="width:min(900px, 98vw);max-height:92vh;overflow-y:auto">
+    <div class="modal-head no-print" style="display:flex;justify-content:space-between;align-items:center">
+      <h3>كشف تعديل فصول الطلاب المعتمد (نظام نور)</h3>
+      <div class="toolbar">
+        <button id="triggerPrintNoor" class="btn btn-primary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+          طباعة الكشف الآن
+        </button>
+        <button id="closeNoorModal" class="btn btn-soft">إغلاق</button>
+      </div>
+    </div>
+    <div class="modal-body" id="noorPrintContent" style="padding:24px">
+      <!-- Injected via JS with official Noor print sheet -->
+    </div>
+  </div>
+</div>
+
+<!-- Dedicated Modal for All Transfer Requests Printable Register -->
+<div id="requestsPrintModal" class="modal hidden">
+  <div class="modal-card" style="width:min(940px, 98vw);max-height:92vh;overflow-y:auto">
+    <div class="modal-head no-print" style="display:flex;justify-content:space-between;align-items:center">
+      <h3>السجل الشامل لطلبات النقل والقرارات الصادرة</h3>
+      <div class="toolbar">
+        <button id="triggerPrintRequests" class="btn btn-primary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+          طباعة السجل الآن
+        </button>
+        <button id="closeRequestsModal" class="btn btn-soft">إغلاق</button>
+      </div>
+    </div>
+    <div class="modal-body" id="requestsPrintContent" style="padding:24px">
+      <!-- Injected via JS with official Requests register sheet -->
+    </div>
+  </div>
+</div>
+
+<script src="/assets/xlsx.full.min.js"></script>
+<script src="/assets/config.js?v=2.4.0"></script>
+<script src="/trans/common.js?v=2.4.0"></script>
+<script src="/trans/report.js?v=2.4.0"></script>
 </body>
 </html>
