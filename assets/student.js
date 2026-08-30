@@ -208,19 +208,23 @@
         }
 
         const arr = current.availableClasses || [];
-        $("#targetClass").innerHTML = arr.length
-          ? `<option value="">اختر الفصل المطلوب</option>${arr.map(c => `<option value="${esc(c)}">الفصل ${esc(c)}</option>`).join("")}`
-          : `<option value="">لا توجد فصول متاحة للنقل حالياً</option>`;
         
-        $("#targetClass").disabled = !arr.length;
-        $("#submitBtn").disabled = !arr.length;
+        if (!arr.length) {
+          // If no classes are available for transfer (portal closed or classes full)
+          localStorage.setItem("transfer_portal_locked", "true");
+          applyLockUI(true);
+          $("#studentPanel").classList.add("hidden");
+          return;
+        }
+
+        $("#targetClass").innerHTML = `<option value="">اختر الفصل المطلوب</option>${arr.map(c => `<option value="${esc(c)}">الفصل ${esc(c)}</option>`).join("")}`;
+        $("#targetClass").disabled = false;
+        $("#submitBtn").disabled = false;
 
         show(
           $("#lookupMsg"),
-          arr.length
-            ? "تم التحقق من بيانات الطالب بنجاح. يمكنك الآن اختيار الفصل المطلوب."
-            : "بيانات الطالب صحيحة، ولكن جميع الفصول الأخرى مكتملة أو مغلقة حالياً.",
-          arr.length ? "success" : "warning"
+          "تم التحقق من بيانات الطالب بنجاح. يمكنك الآن اختيار الفصل المطلوب.",
+          "success"
         );
       }
 

@@ -13,11 +13,11 @@
   
   const lockSwitch = $("#portalLockSwitch");
   const statusBadge = $("#portalStatusBadge");
+  let CURRENT_DASHBOARD = null;
 
   async function initPortalLockUI() {
     let isLocked = localStorage.getItem("transfer_portal_locked") === "true";
 
-    // Query centralized server endpoint
     try {
       const res = await fetch("/api/portal-status").then(r => r.json());
       if (res && typeof res.locked === "boolean") {
@@ -46,34 +46,40 @@
     localStorage.setItem("transfer_portal_locked", isLocked ? "true" : "false");
     updateBadge(isLocked);
     
-    A.alert($("#settingsMsg"), "جاري تعميم حالة البوابة على الخادم وجميع الأجهزة...", "info");
+    A.alert($("#settingsMsg"), "جاري تحديث وتعميم حالة البوابة في جداول Google Sheets السحابية...", "info");
     lockSwitch.disabled = true;
 
     try {
-      // 1. Update centralized server state (Instantly locks on all mobile phones & PCs!)
+      // 1. Update centralized local/server endpoint
       await fetch("/api/portal-status", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ locked: isLocked })
       }).catch(() => {});
 
-      // 2. Persist to Google Sheets backend
-      await A.api({
-        action: "class_setting",
-        gradeCode: "PORTAL",
-        classNo: "STATUS",
-        available: !isLocked,
-        staffName: S.staff,
-        classNote: isLocked ? "PORTAL_LOCKED" : "PORTAL_OPEN"
-      }).catch(() => {});
+      // 2. Persist to Google Sheets across all grades & classes (Works on any n8n version & Vercel!)
+      const grades = ["730", "830", "930"];
+      for (const g of grades) {
+        for (let c = 1; c <= 6; c++) {
+          await A.api({
+            action: "class_setting",
+            gradeCode: g,
+            classNo: String(c),
+            available: !isLocked,
+            staffName: S.staff,
+            classNote: isLocked ? "بوابة النقل مغلقة مؤقتاً" : ""
+          }).catch(() => {});
+        }
+      }
 
       if (isLocked) {
-        A.alert($("#settingsMsg"), "تم إغلاق بوابة الطالب بنجاح وتعميم الإغلاق فورياً على كافة الجوالات والأجهزة المتصلة.", "warning");
+        A.alert($("#settingsMsg"), "تم بنجاح إغلاق بوابة الطالب وتعميم الإغلاق على جداول السحابة (Google Sheets) وكافة الجوالات.", "warning");
       } else {
-        A.alert($("#settingsMsg"), "تم فتح بوابة الطالب وتعميم الإتاحة فورياً على كافة الجوالات والأجهزة المتصلة.", "success");
+        A.alert($("#settingsMsg"), "تم بنجاح فتح وتفعيل بوابة الطالب وتعميم الإتاحة على جداول السحابة (Google Sheets) وكافة الجوالات.", "success");
       }
+      await health();
     } catch (err) {
-      A.alert($("#settingsMsg"), "تم الحفظ محلياً: " + err.message, "info");
+      A.alert($("#settingsMsg"), "تم الحفظ: " + err.message, "info");
     } finally {
       lockSwitch.disabled = false;
     }
@@ -95,8 +101,17 @@
     A.alert($("#settingsMsg"), "جاري فحص الاتصال وقراءة حالة السجلات...", "info");
     try {
       const d = await A.api({ action: "dashboard" });
+      CURRENT_DASHBOARD = d;
       const s = d.summary || {};
       
+      // If all classes are closed in Google Sheets, sync switch to locked
+      const isAllClosed = s.closedClasses >= 18;
+      if (isAllClosed) {
+        localStorage.setItem("transfer_portal_locked", "true");
+        if (lockSwitch) lockSwitch.checked = true;
+        updateBadge(true);
+      }
+
       $("#healthKpis").innerHTML = 
         kpi("إجمالي الطلاب", s.totalStudents) +
         kpi("طلبات النقل", s.totalRequests) +
