@@ -209,17 +209,16 @@
       card.querySelector(".target").value = card.dataset.rec;
       changed(card);
     });
-    A.alert($("#pageMsg"), "تم ضبط الأهداف المقترحة آلياً لجميع الفصول. اضغط «حفظ جميع التعديلات» لتثبيتها.", "info");
+    A.alert($("#pageMsg"), "تم ضبط الأهداف المقترحة آلياً لفصول هذا الصف. اضغط «حفظ فصول هذا الصف» لتثبيتها.", "info");
   });
 
   $("#saveAllBtn").addEventListener("click", async () => {
-    const cards = all(".class-card").filter(c => dirty.has(c.dataset.key));
-    if (!cards.length) {
-      A.alert($("#pageMsg"), "لا توجد أي تعديلات جديدة تتطلب الحفظ.", "info");
-      return;
-    }
+    const cards = all(".class-card");
+    if (!cards.length) return;
 
     $("#saveAllBtn").disabled = true;
+    A.alert($("#pageMsg"), `جاري حفظ وتثبيت إعدادات فصول (${GRADE}) في Google Sheets...`, "info");
+    
     let ok = 0;
     for (const c of cards) {
       if (await saveCard(c, true)) ok++;
@@ -227,10 +226,54 @@
     $("#saveAllBtn").disabled = false;
 
     if (ok === cards.length) {
-      A.alert($("#pageMsg"), "تم حفظ وتثبيت جميع إعدادات الفصول بنجاح.", "success");
+      A.alert($("#pageMsg"), `تم حفظ وتثبيت جميع فصول (${GRADE}) الـ ${ok} بنجاح في Google Sheets ✓`, "success");
       await load();
     } else {
-      A.alert($("#pageMsg"), `تم حفظ ${ok} من أصل ${cards.length} فصل.`, "error");
+      A.alert($("#pageMsg"), `تم حفظ ${ok} من أصل ${cards.length} فصل.`, "warning");
+    }
+  });
+
+  // Save ALL 18 Classes for the Whole School to Google Sheets in one click!
+  $("#saveSchoolAllBtn").addEventListener("click", async () => {
+    if (!DATA || !DATA.classManagement) return;
+
+    const btn = $("#saveSchoolAllBtn");
+    btn.disabled = true;
+    A.alert($("#pageMsg"), "جاري تثبيت وحفظ جميع فصول المدرسة بالكامل (18 فصلاً) في جدول Google Sheets السحابي...", "info");
+
+    const s = A.session();
+    let totalSaved = 0;
+    let errors = 0;
+
+    for (const [gradeName, g] of Object.entries(DATA.classManagement)) {
+      for (const c of Object.values(g.classes)) {
+        try {
+          const targetToSave = c.customTarget ?? c.recommendedTarget;
+          await A.api({
+            action: "saveClassSettings",
+            gradeCode: g.code,
+            classNo: c.classNo,
+            available: c.available,
+            excluded: c.excluded,
+            targetCount: String(targetToSave),
+            classNote: c.note || (c.excluded ? "فصل مستبعد" : ""),
+            staffName: s.staff
+          });
+          totalSaved++;
+        } catch (e) {
+          errors++;
+        }
+      }
+    }
+
+    btn.disabled = false;
+
+    if (errors === 0) {
+      A.alert($("#pageMsg"), `تم بنجاح تثبيت وتعبئة كافة فصول المدرسة الـ ${totalSaved} فصلاً في جدول Google Sheets بالكامل! 🌟`, "success");
+      await load();
+    } else {
+      A.alert($("#pageMsg"), `تم حفظ ${totalSaved} فصلاً، وحدث خطأ في ${errors} فصول.`, "warning");
+      await load();
     }
   });
 
