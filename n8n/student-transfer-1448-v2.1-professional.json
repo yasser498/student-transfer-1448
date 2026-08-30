@@ -2498,7 +2498,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const prep=$('التحقق من طلب النقل').first().json;\nconst row=$input.first()?.json??{};\nconst settingsRows=$('قراءة إعدادات الفصول - تقديم').all().map(i=>i.json||{});\nconst portalLockRow = settingsRows.find(r => String(r['مفتاح الفصل']??'').trim() === 'PORTAL-STATUS');\nconst isPortalLocked = portalLockRow ? String(portalLockRow['متاح للنقل']??'نعم').trim() === 'لا' : false;\n\nif (isPortalLocked) {\n  return [{json:{...prep,canContinue:false,message:'عذراً، بوابة استقبال وتعديل طلبات النقل مغلقة حالياً من قِبل إدارة المدرسة.'}}];\n}\n\nconst found=String(row['مفتاح الفصل']??'').trim();\nconst available=found ? String(row['متاح للنقل']??'نعم').trim()!=='لا' : true;\nreturn [{json:{...prep,canContinue:available,message:available?'':`الفصل ${prep.toClass} غير متاح لاستقبال طلبات النقل حاليًا. اختر فصلًا آخر.`}}];"
+        "jsCode": "const prep = $('التحقق من طلب النقل').first().json;\nconst row = $input.first()?.json ?? {};\nconst found = String(row['مفتاح الفصل'] ?? '').trim();\nconst available = found ? String(row['متاح للنقل'] ?? 'نعم').trim() !== 'لا' : true;\n\nreturn [{\n  json: {\n    ...prep,\n    canContinue: available,\n    message: available ? '' : `الفصل ${prep.toClass} غير متاح لاستقبال طلبات النقل حاليًا. اختر فصلًا آخر.`\n  }\n}];"
       },
       "id": "b2b6c798-2956-4227-b2e5-bd5a1b9e6e14",
       "name": "التحقق من إتاحة الفصل للنقل",

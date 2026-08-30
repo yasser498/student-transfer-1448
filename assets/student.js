@@ -171,28 +171,52 @@
         show($("#lookupMsg"), "تم التحقق من بيانات الطالب (لديه طلب نقل قائم قيد المعالجة).", "warning");
 
       } else if (approvedReq) {
-        // CASE B: Already Approved -> Block form and show apologize notice
+        // CASE B: Already Approved -> Block form and show luxury approved notice
         transferForm.classList.add("hidden");
         noticeArea.innerHTML = `
           <div class="status-notice-card approved">
             <div class="notice-header">
               <div class="notice-icon-box">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
               </div>
               <div>
-                <h3>تمت الاستفادة من خدمة النقل سابقاً لهذا العام</h3>
+                <h3 style="color:#065f46">تم اعتماد نقل الطالب بنجاح</h3>
                 <small style="color:#047857;font-weight:700">طلب معتمد برقم: #${esc(approvedReq.requestId)}</small>
               </div>
             </div>
-            <div class="notice-body">
-              نعتذر، لقد تم قبول واعتماد نقل الطالب مسبقاً لهذا العام الدراسي من <b>الفصل ${esc(approvedReq.fromClass)}</b> إلى <b>الفصل ${esc(approvedReq.toClass)}</b> بتاريخ <b>${esc(approvedReq.decisionDate || approvedReq.date)}</b>.
+
+            <div class="decision-banner approved">
+              <div class="decision-icon">🎓</div>
+              <div class="decision-text">
+                <h4>تم اعتماد النقل إلى الفصل (${esc(approvedReq.toClass)}) بنجاح</h4>
+                <p>نبارك لكم صدور القرار الرسمي، مع أطيب التمنيات بالتوفيق والتميز الدراسي والنجاح الدائم ✨</p>
+              </div>
             </div>
+
+            <div class="transfer-route-box">
+              <div class="route-step">
+                <span>الفصل السابق</span>
+                <strong>الفصل ${esc(approvedReq.fromClass)}</strong>
+              </div>
+              <div class="route-arrow">←</div>
+              <div class="route-step">
+                <span style="color:#047857">الفصل الجديد المعتمد</span>
+                <strong style="color:#047857;font-size:16px">الفصل ${esc(approvedReq.toClass)} 🟢</strong>
+              </div>
+            </div>
+
+            <div class="notice-meta-grid">
+              <div class="notice-meta-pill">تاريخ القرار: <b>${esc(approvedReq.decisionDate || approvedReq.date)}</b></div>
+              <div class="notice-meta-pill">حالة الطلب: <b style="color:#047857">معتمد ومنفذ</b></div>
+              <div class="notice-meta-pill">المعتمد: <b>${esc(approvedReq.approvedBy || "إدارة المدرسة")}</b></div>
+            </div>
+
             <div class="notice-footer-hint">
-              تمنح إدارة المدرسة فرصة نقل واحدة معتمدة لكل طالب خلال العام لضمان استقرار الشعب والموازنة التعليمية.
+              📌 تنويه: تمنح إدارة المدرسة فرصة نقل واحدة معتمدة لكل طالب خلال العام لضمان استقرار الشعب والموازنة التعليمية. يُرجى التوجه للفصل الجديد اعتباراً من تاريخ صدور القرار.
             </div>
           </div>
         `;
-        show($("#lookupMsg"), "تمت الاستفادة من خدمة النقل مسبقاً لهذا الطالب.", "info");
+        show($("#lookupMsg"), `تم اعتماد نقل الطالب سابقاً إلى الفصل (${approvedReq.toClass}).`, "success");
 
       } else {
         // CASE C & D: Can submit new request (First time or previously rejected)
@@ -263,13 +287,17 @@
     const reason = $("#reason").value;
     const note = $("#studentNote").value.trim();
 
-    if (!targetClass || !reason) {
-      show($("#submitMsg"), "يرجى تحديد الفصل المطلوب وسبب طلب النقل.", "error");
+    if (!targetClass) {
+      show($("#submitMsg"), "يرجى اختيار الفصل المطلوب.", "error");
+      return;
+    }
+    if (!reason) {
+      show($("#submitMsg"), "يرجى اختيار سبب النقل.", "error");
       return;
     }
 
     $("#submitBtn").disabled = true;
-    show($("#submitMsg"), "جاري إرسال الطلب وحساب أثر الموازنة...", "info");
+    show($("#submitMsg"), "جاري تسجيل طلب النقل في النظام...", "info");
 
     try {
       const d = await post({
@@ -280,10 +308,13 @@
         note
       });
 
-      $("#requestId").textContent = d.requestId || "تم التسجيل";
+      $("#transferForm").reset();
       $("#studentPanel").classList.add("hidden");
       $("#successView").classList.remove("hidden");
+      $("#createdRequestId").textContent = d.requestId || "—";
       show($("#lookupMsg"), "", "info");
+      show($("#submitMsg"), "", "info");
+
     } catch (e) {
       show($("#submitMsg"), e.message, "error");
     } finally {
@@ -325,40 +356,79 @@
         return;
       }
 
-      $("#trackResults").innerHTML = rows.map(r => `
-        <article class="request-card">
-          <div class="request-card-head">
-            <div>
-              <b style="font-size:15px;color:var(--navy-950)">طلب رقم: ${esc(r.requestId)}</b>
-              <div style="font-size:11px;color:#64748b;margin-top:2px">تاريخ التقديم: ${esc(r.date)}</div>
-            </div>
-            <span class="request-badge ${r.status === "مقبول" ? "approved" : r.status === "مرفوض" ? "rejected" : "pending"}">
-              ${esc(r.status)}
-            </span>
-          </div>
-          
-          <div class="request-meta-grid">
-            <div class="request-meta-item">
-              الفصل الحالي
-              <b>الفصل ${esc(r.fromClass)}</b>
-            </div>
-            <div class="request-meta-item">
-              الفصل المطلوب
-              <b style="color:var(--primary)">الفصل ${esc(r.toClass)}</b>
-            </div>
-            <div class="request-meta-item">
-              سبب النقل
-              <b>${esc(r.reason)}</b>
-            </div>
-          </div>
+      $("#trackResults").innerHTML = rows.map(r => {
+        const isApproved = r.status === "مقبول";
+        const isPending = r.status === "قيد المراجعة";
 
-          ${r.managementNote ? `
-            <div class="admin-note-box">
-              <strong>ملاحظة الإدارة:</strong> ${esc(r.managementNote)}
+        return `
+          <article class="request-card ${isApproved ? "card-approved" : isPending ? "card-pending" : ""}">
+            <div class="request-card-head">
+              <div>
+                <b style="font-size:15px;color:var(--navy-950)">طلب نقل رقم: #${esc(r.requestId)}</b>
+                <div style="font-size:11px;color:#64748b;margin-top:2px">تاريخ التقديم: ${esc(r.date)}</div>
+              </div>
+              <span class="request-badge ${isApproved ? "approved" : r.status === "مرفوض" ? "rejected" : "pending"}">
+                ${isApproved ? "✓ " : ""}${esc(r.status)}
+              </span>
             </div>
-          ` : ""}
-        </article>
-      `).join("");
+
+            ${isApproved ? `
+              <div class="decision-banner approved">
+                <div class="decision-icon">🎓</div>
+                <div class="decision-text">
+                  <h4>تم اعتماد النقل إلى الفصل (${esc(r.toClass)}) بنجاح</h4>
+                  <p>نبارك لكم صدور القرار الرسمي، مع أطيب التمنيات بالتوفيق والتميز الدراسي والنجاح الدائم ✨</p>
+                </div>
+              </div>
+            ` : isPending ? `
+              <div class="decision-banner pending">
+                <div class="decision-icon">⏳</div>
+                <div class="decision-text">
+                  <h4>طلب النقل قيد المراجعة والموازنة</h4>
+                  <p>يجري حالياً دراسة طلب النقل إلى الفصل (${esc(r.toClass)}) وفق معايير الطاقة الاستيعابية والموازنة المعتمدة.</p>
+                </div>
+              </div>
+            ` : `
+              <div class="alert error" style="margin:12px 0;font-size:12.5px">
+                <span>تم رفض هذا الطلب. ${r.managementNote ? `السبب: <b>${esc(r.managementNote)}</b>` : "يمكنك التقديم لفصل آخر متاح."}</span>
+              </div>
+            `}
+
+            <div class="transfer-route-box">
+              <div class="route-step">
+                <span>الفصل السابق</span>
+                <strong>الفصل ${esc(r.fromClass)}</strong>
+              </div>
+              <div class="route-arrow">←</div>
+              <div class="route-step">
+                <span style="color:${isApproved ? '#047857' : 'var(--primary)'}">الفصل ${isApproved ? 'الجديد المعتمد' : 'المطلوب'}</span>
+                <strong style="color:${isApproved ? '#047857' : 'var(--primary)'};font-size:${isApproved ? '15px' : '14px'}">الفصل ${esc(r.toClass)} ${isApproved ? '🟢' : ''}</strong>
+              </div>
+            </div>
+
+            <div class="request-meta-grid">
+              <div class="request-meta-item">
+                سبب النقل
+                <b>${esc(r.reason)}</b>
+              </div>
+              <div class="request-meta-item">
+                تاريخ القرار
+                <b>${esc(r.decisionDate || (isPending ? "قيد الدراسة" : "—"))}</b>
+              </div>
+              <div class="request-meta-item">
+                المعتمد
+                <b>${esc(r.approvedBy || (isApproved ? "إدارة المدرسة" : "—"))}</b>
+              </div>
+            </div>
+
+            ${r.managementNote && !isApproved ? `
+              <div class="admin-note-box">
+                <strong>ملاحظة الإدارة:</strong> ${esc(r.managementNote)}
+              </div>
+            ` : ""}
+          </article>
+        `;
+      }).join("");
     } catch (e) {
       $("#trackResults").innerHTML = "";
       show($("#trackMsg"), e.message, "error");
