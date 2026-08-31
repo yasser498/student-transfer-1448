@@ -319,12 +319,17 @@
           "cachedResultName": "الورقة1"
         },
         "filtersUI": {
-          "values": []
+          "values": [
+            {
+              "lookupColumn": "رقم الطالب",
+              "lookupValue": "={{ $json.studentId }}"
+            }
+          ]
         },
         "options": {}
       },
       "id": "9fe075d0-2367-4653-96d8-3faef1d8ce8f",
-      "name": "قراءة طلاب المدرسة - استعلام",
+      "name": "البحث عن الطالب - استعلام",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
@@ -341,7 +346,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const req = $('تحليل طلب موقع النقل').first().json;\nconst allStudents = $('قراءة طلاب المدرسة - استعلام').all().map(i => i.json || {});\nconst settings = $('قراءة إعدادات الفصول - استعلام').all().map(i => i.json || {}).filter(r => String(r['مفتاح الفصل'] ?? '').trim());\n\n// 1. Check global portal lock\nconst portalLockRow = settings.find(r => String(r['مفتاح الفصل'] ?? '').trim() === 'PORTAL-STATUS');\nconst isPortalLocked = portalLockRow ? String(portalLockRow['متاح للنقل'] ?? 'نعم').trim() === 'لا' : false;\n\nif (isPortalLocked) {\n  return [{\n    json: {\n      success: false,\n      portalLocked: true,\n      message: 'سوف يُتاح الموقع قريباً لنقل الطلاب. البوابة مغلقة حالياً من قِبل إدارة المدرسة.'\n    }\n  }];\n}\n\n// 2. Find the requested student\nconst studentId = String(req.studentId ?? '').trim();\nif (!studentId) {\n  return [{ json: { success: false, message: 'يرجى إدخال رقم الطالب / الهوية.' } }];\n}\n\nconst row = allStudents.find(r => String(r['رقم الطالب'] ?? '').trim() === studentId) || {};\nconst name = String(row['اسم الطالب'] ?? '').trim();\nconst gradeCode = String(row['رقم الصف'] ?? '').trim();\nconst classNo = String(row['الفصل'] ?? '').trim();\nconst gradeMap = { '730': 'الأول متوسط', '830': 'الثاني متوسط', '930': 'الثالث متوسط' };\nconst maxMap = { '730': 6, '830': 6, '930': 6 };\n\nif (!name || !gradeMap[gradeCode] || !classNo) {\n  return [{ json: { success: false, message: 'لم يتم العثور على بيانات الطالب في سجلات المدرسة.' } }];\n}\n\n// 3. Count live students currently enrolled in each class of this grade\nconst classCounts = {};\nfor (const s of allStudents) {\n  if (String(s['رقم الصف'] ?? '').trim() === gradeCode) {\n    const c = String(s['الفصل'] ?? '').trim();\n    if (c) {\n      classCounts[c] = (classCounts[c] || 0) + 1;\n    }\n  }\n}\n\n// 4. Build configuration and capacity limits for each class\nconst config = {};\nfor (const r of settings) {\n  const key = String(r['مفتاح الفصل'] ?? '').trim();\n  const targetCount = Number(String(r['العدد المستهدف'] ?? '').trim()) || 33;\n  config[key] = {\n    available: String(r['متاح للنقل'] ?? 'نعم').trim() !== 'لا',\n    excluded: String(r['مستبعد من الموازنة'] ?? 'لا').trim() === 'نعم',\n    target: targetCount\n  };\n}\n\n// 5. Dynamic on-the-fly capacity filter:\n// A class is available ONLY IF:\n// - Not the student's current class\n// - Not manually disabled by admin (available !== false)\n// - Not excluded from balance (excluded !== true)\n// - Has vacant seats: current live count is STRICTLY LESS THAN the target capacity (count < target)\nconst availableClasses = Array.from({ length: maxMap[gradeCode] || 6 }, (_, i) => String(i + 1)).filter(c => {\n  if (c === classNo) return false;\n  const key = gradeCode + '-' + c;\n  const s = config[key];\n  if (s && s.excluded) return false;\n  if (s && !s.available) return false;\n\n  const currentCount = classCounts[c] || 0;\n  const target = (s && s.target) ? s.target : 33;\n  \n  // Dynamic live capacity filter: if currentCount >= target, the class is automatically hidden on the fly!\n  if (currentCount >= target) return false;\n\n  return true;\n});\n\nreturn [{\n  json: {\n    success: true,\n    student: {\n      studentId: req.studentId,\n      name,\n      gradeCode,\n      grade: gradeMap[gradeCode],\n      class: classNo,\n      availableClasses\n    }\n  }\n}];"
+        "jsCode": "const req=$('تحليل طلب موقع النقل').first().json;\nconst row=$('البحث عن الطالب - استعلام').first()?.json??{};\nconst settings=$input.all().map(i=>i.json||{}).filter(r=>String(r['مفتاح الفصل']??'').trim());\n\n// Check global portal lock\nconst portalLockRow = settings.find(r => String(r['مفتاح الفصل']??'').trim() === 'PORTAL-STATUS');\nconst isPortalLocked = portalLockRow ? String(portalLockRow['متاح للنقل']??'نعم').trim() === 'لا' : false;\n\nif (isPortalLocked) {\n  return [{json:{success:false,portalLocked:true,message:'سوف يُتاح الموقع قريباً لنقل الطلاب. البوابة مغلقة حالياً من قِبل إدارة المدرسة.'}}];\n}\n\nconst name=String(row['اسم الطالب']??'').trim();\nconst gradeCode=String(row['رقم الصف']??'').trim();\nconst classNo=String(row['الفصل']??'').trim();\nconst gradeMap={'730':'الأول متوسط','830':'الثاني متوسط','930':'الثالث متوسط'};\nconst maxMap={'730':6,'830':6,'930':6};\nif(!req.studentId) return [{json:{success:false,message:'يرجى إدخال رقم الطالب / الهوية.'}}];\nif(!name||!gradeMap[gradeCode]||!classNo) return [{json:{success:false,message:'لم يتم العثور على بيانات الطالب.'}}];\nconst config={};\nfor(const r of settings){\n const key=String(r['مفتاح الفصل']??'').trim();\n config[key]={available:String(r['متاح للنقل']??'نعم').trim()!=='لا',excluded:String(r['مستبعد من الموازنة']??'لا').trim()==='نعم'};\n}\nconst availableClasses=Array.from({length:maxMap[gradeCode]},(_,i)=>String(i+1)).filter(c=>{\n if(c===classNo) return false;\n const s=config[`${gradeCode}-${c}`];\n return !s || s.available;\n});\nreturn [{json:{success:true,student:{studentId:req.studentId,name,gradeCode,grade:gradeMap[gradeCode],class:classNo,availableClasses}}}];"
       },
       "id": "8247a6ef-9cd9-4e35-80af-3527d8ff8a08",
       "name": "بناء نتيجة الطالب",
@@ -2493,7 +2498,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const prep = $('التحقق من طلب النقل').first().json;\nconst row = $input.first()?.json ?? {};\nconst found = String(row['مفتاح الفصل'] ?? '').trim();\nconst available = found ? String(row['متاح للنقل'] ?? 'نعم').trim() !== 'لا' : true;\nconst excluded = found ? String(row['مستبعد من الموازنة'] ?? 'لا').trim() === 'نعم' : false;\n\nconst canContinue = available && !excluded;\n\nreturn [{\n  json: {\n    ...prep,\n    canContinue: canContinue,\n    message: canContinue ? '' : 'الفصل ' + prep.toClass + ' غير متاح أو مكتمل الطاقة الاستيعابية حالياً. اختر فصلاً آخر به مقاعد شاغرة.'\n  }\n}];"
+        "jsCode": "const prep = $('التحقق من طلب النقل').first().json;\nconst row = $input.first()?.json ?? {};\nconst found = String(row['مفتاح الفصل'] ?? '').trim();\nconst available = found ? String(row['متاح للنقل'] ?? 'نعم').trim() !== 'لا' : true;\n\nreturn [{\n  json: {\n    ...prep,\n    canContinue: available,\n    message: available ? '' : `الفصل ${prep.toClass} غير متاح لاستقبال طلبات النقل حاليًا. اختر فصلًا آخر.`\n  }\n}];"
       },
       "id": "b2b6c798-2956-4227-b2e5-bd5a1b9e6e14",
       "name": "التحقق من إتاحة الفصل للنقل",
@@ -3038,7 +3043,7 @@
       "main": [
         [
           {
-            "node": "قراءة طلاب المدرسة - استعلام",
+            "node": "البحث عن الطالب - استعلام",
             "type": "main",
             "index": 0
           }
@@ -3046,6 +3051,17 @@
         [
           {
             "node": "هل العملية تقديم طلب؟",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "البحث عن الطالب - استعلام": {
+      "main": [
+        [
+          {
+            "node": "قراءة إعدادات الفصول - استعلام",
             "type": "main",
             "index": 0
           }
@@ -3797,17 +3813,6 @@
         [
           {
             "node": "إرجاع خطأ إعداد الفصل",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "قراءة طلاب المدرسة - استعلام": {
-      "main": [
-        [
-          {
-            "node": "قراءة إعدادات الفصول - استعلام",
             "type": "main",
             "index": 0
           }

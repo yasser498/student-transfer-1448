@@ -28,7 +28,7 @@ function getPortalState() {
       return JSON.parse(fs.readFileSync(STATE_FILE, 'utf8'));
     }
   } catch (e) {}
-  return { locked: false, autoCapLock: true };
+  return { locked: false };
 }
 
 function setPortalState(state) {
@@ -61,17 +61,15 @@ const server = http.createServer((req, res) => {
 
     if (req.method === 'POST') {
       let body = '';
-      req.on('data', chunk => { body += chunk; });
+      req.on('data', chunk => body += chunk);
       req.on('end', () => {
         try {
           const data = JSON.parse(body || '{}');
-          const current = getPortalState();
-          if (typeof data.locked === 'boolean') current.locked = data.locked;
-          if (typeof data.autoCapLock === 'boolean') current.autoCapLock = data.autoCapLock;
-          current.updatedAt = new Date().toISOString();
-          setPortalState(current);
+          const isLocked = Boolean(data.locked);
+          const state = { locked: isLocked, updatedAt: new Date().toISOString() };
+          setPortalState(state);
           res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-          res.end(JSON.stringify({ success: true, ...current }));
+          res.end(JSON.stringify({ success: true, ...state }));
         } catch (e) {
           res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
           res.end(JSON.stringify({ success: false, message: 'Invalid JSON' }));
