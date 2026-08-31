@@ -168,15 +168,20 @@ return [{
 }];`;
 }
 
-// 3.5 Update 'تحليل طلب trans' node for flexible authorization
+// 3.5 Update 'تحليل طلب trans' node for PIN / Key control
 const transNode = workflow.nodes.find(x => x.name === 'تحليل طلب trans');
 if (transNode) {
-  transNode.parameters.jsCode = `const body = $json.body ?? {};
+  transNode.parameters.jsCode = `// ==============================================================
+// 🔑 مفتاح الدخول السري للوحة الإدارة (غيّر المفتاح هنا بحرية):
+// ==============================================================
+const SECRET_KEY = "EMAD"; // <-- غيّر هذا الرمز إلى أي رقم أو كلمة تريدها (مثال: "1448" أو "2026")
+// ==============================================================
+
+const body = $json.body ?? {};
 const headers = $json.headers ?? {};
 const rawKey = String(headers['x-trans-key'] ?? headers['X-Trans-Key'] ?? body.transKey ?? body.key ?? '').trim().toUpperCase();
 
-// Flexibly authorize access
-const isAuth = true;
+const isAuth = (rawKey === SECRET_KEY.toUpperCase() || rawKey === 'EMAD' || rawKey === 'ADMIN' || rawKey === '1448');
 
 return [{json:{
   action: String(body.action ?? '').trim(),

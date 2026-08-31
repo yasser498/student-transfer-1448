@@ -66,6 +66,116 @@
     `;
   }
 
+  function render() {
+    if (!DATA) return;
+    const s = DATA.summary || {};
+    
+    $("#kpis").innerHTML = 
+      kpi("إجمالي الطلاب", s.totalStudents, "users") +
+      kpi("طلبات النقل", s.totalRequests, "requests") +
+      kpi("قيد المراجعة", s.pending, "clock", "#fffbeb;color:#d97706") +
+      kpi("مقبول", s.approved, "check", "#ecfdf5;color:#059669") +
+      kpi("مرفوض", s.rejected, "x", "#fef2f2;color:#dc2626");
+
+    const gs = ["الكل", ...Object.keys(DATA.classManagement || {})];
+    GRADE = gs.includes(GRADE) ? GRADE : "الكل";
+
+    $("#gradeTabs").innerHTML = gs.map(g => `
+      <button class="grade-tab ${g === GRADE ? "active" : ""}" data-grade="${A.esc(g)}">${A.esc(g)}</button>
+    `).join("");
+
+    all(".grade-tab").forEach(b => {
+      b.addEventListener("click", () => {
+        GRADE = b.dataset.grade;
+        renderBalance();
+        renderRequests();
+        all(".grade-tab").forEach(x => x.classList.toggle("active", x === b));
+      });
+    });
+
+    renderBalance();
+    renderRequests();
+  }
+
+  function renderBalance() {
+    if (!DATA || !DATA.classManagement) return;
+
+    if (GRADE === "الكل") {
+      const allCards = [];
+      for (const [gradeName, g] of Object.entries(DATA.classManagement)) {
+        const max = Math.max(...Object.values(g.classes).map(c => c.count), 1);
+        const cards = Object.values(g.classes)
+          .sort((a, b) => Number(a.classNo) - Number(b.classNo))
+          .map(c => {
+            const d = Number(c.delta);
+            return `
+              <div class="class-stat" style="${!c.available ? "opacity:0.65;border-style:dashed" : ""}">
+                <div class="class-stat-head">
+                  <div>
+                    <small style="color:var(--primary);font-weight:800">${A.esc(gradeName)}</small>
+                    <strong style="display:block">الفصل ${c.classNo}</strong>
+                  </div>
+                  <div style="text-align:left">
+                    <span style="font-size:17px;font-weight:900;color:var(--navy-950)">${A.num(c.count)}</span>
+                    <span class="delta ${c.excluded ? "ok" : d > 0 ? "need" : d < 0 ? "extra" : "ok"}" style="display:block;margin-top:2px">
+                      ${c.excluded ? "مستبعد" : d > 0 ? `يحتاج ${A.num(d)}` : d < 0 ? `فائض ${A.num(Math.abs(d))}` : "متوازن"}
+                    </span>
+                  </div>
+                </div>
+                <div class="progress">
+                  <i style="width:${Math.min(100, (c.count / max) * 100)}%"></i>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--text-muted);margin-top:4px">
+                  <span>الهدف: <b>${A.num(c.target)}</b></span>
+                  <span>${!c.available ? "مغلق للنقل" : "متاح للنقل"}</span>
+                </div>
+              </div>
+            `;
+          }).join("");
+        allCards.push(cards);
+      }
+      $("#balanceGrid").innerHTML = allCards.join("");
+      return;
+    }
+
+    const g = DATA.classManagement?.[GRADE];
+    if (!g) return;
+    
+    const max = Math.max(...Object.values(g.classes).map(c => c.count), 1);
+    
+    $("#balanceGrid").innerHTML = Object.values(g.classes)
+      .sort((a, b) => Number(a.classNo) - Number(b.classNo))
+      .map(c => {
+        const d = Number(c.delta);
+        return `
+          <div class="class-stat" style="${!c.available ? "opacity:0.65;border-style:dashed" : ""}">
+            <div class="class-stat-head">
+              <div>
+                <small>الشعبة / الفصل</small>
+                <strong>${c.classNo}</strong>
+              </div>
+              <div style="text-align:left">
+                <span style="font-size:18px;font-weight:900;color:var(--navy-950)">${A.num(c.count)}</span>
+                <span class="delta ${c.excluded ? "ok" : d > 0 ? "need" : d < 0 ? "extra" : "ok"}" style="display:block;margin-top:2px">
+                  ${c.excluded ? "مستبعد" : d > 0 ? `يحتاج ${A.num(d)}` : d < 0 ? `فائض ${A.num(Math.abs(d))}` : "متوازن"}
+                </span>
+              </div>
+            </div>
+            <div class="progress">
+              <i style="width:${Math.min(100, (c.count / max) * 100)}%"></i>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--text-muted);margin-top:4px">
+              <span>الهدف: <b>${A.num(c.target)}</b></span>
+              <span>${!c.available ? "مغلق للنقل" : "متاح للنقل"}</span>
+            </div>
+          </div>
+        `;
+      }).join("");
+  }
+
+  $("#statusFilter").addEventListener("change", renderRequests);
+  $("#searchInput").addEventListener("input", renderRequests);
+
   // ================= SMART MULTI-HOP BALANCING & CHAIN ENGINE =================
   function findOptimalChains(requests, classManagement, selectedGrade) {
     if (!requests || !classManagement) return { chains: [], studentChainMap: new Map() };
