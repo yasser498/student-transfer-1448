@@ -319,17 +319,12 @@
           "cachedResultName": "الورقة1"
         },
         "filtersUI": {
-          "values": [
-            {
-              "lookupColumn": "رقم الطالب",
-              "lookupValue": "={{ $json.studentId }}"
-            }
-          ]
+          "values": []
         },
         "options": {}
       },
       "id": "9fe075d0-2367-4653-96d8-3faef1d8ce8f",
-      "name": "البحث عن الطالب - استعلام",
+      "name": "قراءة طلاب المدرسة - استعلام",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
@@ -342,11 +337,15 @@
           "id": "xvE2YldRdvKwWziR",
           "name": "Google Sheets account"
         }
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 1000,
+      "executeOnce": true
     },
     {
       "parameters": {
-        "jsCode": "const req=$('تحليل طلب موقع النقل').first().json;\nconst row=$('البحث عن الطالب - استعلام').first()?.json??{};\nconst settings=$input.all().map(i=>i.json||{}).filter(r=>String(r['مفتاح الفصل']??'').trim());\n\n// Check global portal lock\nconst portalLockRow = settings.find(r => String(r['مفتاح الفصل']??'').trim() === 'PORTAL-STATUS');\nconst isPortalLocked = portalLockRow ? String(portalLockRow['متاح للنقل']??'نعم').trim() === 'لا' : false;\n\nif (isPortalLocked) {\n  return [{json:{success:false,portalLocked:true,message:'سوف يُتاح الموقع قريباً لنقل الطلاب. البوابة مغلقة حالياً من قِبل إدارة المدرسة.'}}];\n}\n\nconst name=String(row['اسم الطالب']??'').trim();\nconst gradeCode=String(row['رقم الصف']??'').trim();\nconst classNo=String(row['الفصل']??'').trim();\nconst gradeMap={'730':'الأول متوسط','830':'الثاني متوسط','930':'الثالث متوسط'};\nconst maxMap={'730':6,'830':6,'930':6};\nif(!req.studentId) return [{json:{success:false,message:'يرجى إدخال رقم الطالب / الهوية.'}}];\nif(!name||!gradeMap[gradeCode]||!classNo) return [{json:{success:false,message:'لم يتم العثور على بيانات الطالب.'}}];\nconst config={};\nfor(const r of settings){\n const key=String(r['مفتاح الفصل']??'').trim();\n config[key]={available:String(r['متاح للنقل']??'نعم').trim()!=='لا',excluded:String(r['مستبعد من الموازنة']??'لا').trim()==='نعم'};\n}\nconst availableClasses=Array.from({length:maxMap[gradeCode]},(_,i)=>String(i+1)).filter(c=>{\n if(c===classNo) return false;\n const s=config[`${gradeCode}-${c}`];\n return !s || s.available;\n});\nreturn [{json:{success:true,student:{studentId:req.studentId,name,gradeCode,grade:gradeMap[gradeCode],class:classNo,availableClasses}}}];"
+        "jsCode": "const req = $('تحليل طلب موقع النقل').first().json;\nconst row = $('البحث عن الطالب - استعلام').first()?.json ?? {};\nconst settings = $input.all().map(i => i.json || {}).filter(r => String(r['مفتاح الفصل'] ?? '').trim());\n\n// 1. Check global portal lock\nconst portalLockRow = settings.find(r => String(r['مفتاح الفصل'] ?? '').trim() === 'PORTAL-STATUS');\nconst isPortalLocked = portalLockRow ? String(portalLockRow['متاح للنقل'] ?? 'نعم').trim() === 'لا' : false;\n\nif (isPortalLocked) {\n  return [{\n    json: {\n      success: false,\n      portalLocked: true,\n      message: 'سوف يُتاح الموقع قريباً لنقل الطلاب. البوابة مغلقة حالياً من قِبل إدارة المدرسة.'\n    }\n  }];\n}\n\n// 2. Student Info & Normalization\nfunction normId(v) {\n  if (!v) return '';\n  return String(v).trim().replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/[​-‍﻿]/g, '');\n}\n\nconst reqIdRaw = normId(req.studentId);\nconst name = String(row['اسم الطالب'] ?? '').trim();\nconst gradeCode = String(row['رقم الصف'] ?? '').trim();\nconst classNo = String(row['الفصل'] ?? '').trim();\nconst gradeMap = { '730': 'الأول متوسط', '830': 'الثاني متوسط', '930': 'الثالث متوسط' };\nconst maxMap = { '730': 6, '830': 6, '930': 6 };\n\nif (!reqIdRaw) {\n  return [{ json: { success: false, message: 'يرجى إدخال رقم الطالب / الهوية الوطنية / السجل.' } }];\n}\n\nif (!name || !gradeMap[gradeCode] || !classNo) {\n  return [{ json: { success: false, message: 'لم يتم العثور على بيانات الطالب في سجلات المدرسة. يرجى التأكد من صحة رقم الهوية.' } }];\n}\n\n// 3. Class Configuration Map\nconst config = {};\nfor (const r of settings) {\n  const key = String(r['مفتاح الفصل'] ?? '').trim();\n  config[key] = {\n    available: String(r['متاح للنقل'] ?? 'نعم').trim() !== 'لا',\n    excluded: String(r['مستبعد من الموازنة'] ?? 'لا').trim() === 'نعم'\n  };\n}\n\n// 4. Return all open classes (excluding current class and excluded classes)\nconst availableClasses = Array.from({ length: maxMap[gradeCode] || 6 }, (_, i) => String(i + 1)).filter(c => {\n  if (c === classNo) return false;\n  const key = gradeCode + '-' + c;\n  const s = config[key];\n  if (s && s.excluded) return false;\n  return !s || s.available;\n});\n\nreturn [{\n  json: {\n    success: true,\n    student: {\n      studentId: req.studentId,\n      name,\n      gradeCode,\n      grade: gradeMap[gradeCode],\n      class: classNo,\n      availableClasses\n    }\n  }\n}];"
       },
       "id": "8247a6ef-9cd9-4e35-80af-3527d8ff8a08",
       "name": "بناء نتيجة الطالب",
@@ -433,7 +432,10 @@
           "id": "xvE2YldRdvKwWziR",
           "name": "Google Sheets account"
         }
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 1000
     },
     {
       "parameters": {
@@ -570,7 +572,10 @@
           "id": "xvE2YldRdvKwWziR",
           "name": "Google Sheets account"
         }
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 1000
     },
     {
       "parameters": {
@@ -701,7 +706,12 @@
           "id": "xvE2YldRdvKwWziR",
           "name": "Google Sheets account"
         }
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 1000,
+      "executeOnce": true,
+      "alwaysOutputData": true
     },
     {
       "parameters": {
@@ -957,7 +967,11 @@
           "name": "Google Sheets account"
         }
       },
-      "onError": "continueRegularOutput"
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 1000,
+      "alwaysOutputData": true
     },
     {
       "parameters": {
@@ -1048,11 +1062,15 @@
           "id": "xvE2YldRdvKwWziR",
           "name": "Google Sheets account"
         }
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 1000,
+      "executeOnce": true
     },
     {
       "parameters": {
-        "jsCode": "const req=$('تحليل طلب موقع النقل').first().json;\nconst rows=$input.all().map(i=>i.json||{}).filter(r=>String(r['رقم الطلب']??'').trim());\nrows.sort((a,b)=>String(b['تاريخ الطلب']??'').localeCompare(String(a['تاريخ الطلب']??'')));\nconst requests=rows.slice(0,8).map(r=>({\n requestId:String(r['رقم الطلب']??''),date:String(r['تاريخ الطلب']??''),status:String(r['الحالة']??'قيد المراجعة'),\n fromClass:String(r['الفصل الحالي']??''),toClass:String(r['الفصل المطلوب']??''),reason:String(r['سبب الطلب']??''),\n managementNote:String(r['ملاحظة الإدارة']??'')\n}));\nreturn [{json:{success:requests.length>0,requests,message:requests.length?'':'لا توجد طلبات مسجلة لهذا الرقم.'}}];"
+        "jsCode": "const req = $('تحليل طلب موقع النقل').first().json;\nfunction normId(v) {\n  if (!v) return '';\n  return String(v).trim().replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/[​-‍﻿]/g, '');\n}\nfunction stripId(v) {\n  return normId(v).replace(/[^a-zA-Z0-9]/g, '');\n}\n\nconst reqId = normId(req.studentId);\nconst reqIdStripped = stripId(req.studentId);\n\nconst allRows = $input.all().map(i => i.json || {}).filter(r => String(r['رقم الطلب'] ?? '').trim());\n\n// Match requests flexibly\nconst rows = allRows.filter(r => {\n  const rowId = normId(r['رقم الطالب'] ?? '');\n  if (!rowId) return false;\n  if (rowId === reqId) return true;\n  const rowIdStripped = stripId(rowId);\n  if (rowIdStripped && reqIdStripped) {\n    if (rowIdStripped === reqIdStripped) return true;\n    if (rowIdStripped.startsWith(reqIdStripped) || reqIdStripped.startsWith(rowIdStripped)) return true;\n  }\n  return false;\n});\n\nrows.sort((a, b) => String(b['تاريخ الطلب'] ?? '').localeCompare(String(a['تاريخ الطلب'] ?? '')));\nconst requests = rows.slice(0, 8).map(r => ({\n  requestId: String(r['رقم الطلب'] ?? ''),\n  date: String(r['تاريخ الطلب'] ?? ''),\n  status: String(r['الحالة'] ?? 'قيد المراجعة'),\n  fromClass: String(r['الفصل الحالي'] ?? ''),\n  toClass: String(r['الفصل المطلوب'] ?? ''),\n  reason: String(r['سبب الطلب'] ?? ''),\n  managementNote: String(r['ملاحظة الإدارة'] ?? '')\n}));\n\nreturn [{ json: { success: true, requests, message: requests.length ? '' : 'لا توجد طلبات مسجلة لهذا الطالب.' } }];"
       },
       "id": "fead9139-b79d-4b35-a6a1-ecd0272e1d73",
       "name": "بناء متابعة الطلبات",
@@ -1345,7 +1363,12 @@
           "id": "xvE2YldRdvKwWziR",
           "name": "Google Sheets account"
         }
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 1000,
+      "executeOnce": true,
+      "alwaysOutputData": true
     },
     {
       "parameters": {
@@ -1394,7 +1417,11 @@
           "id": "xvE2YldRdvKwWziR",
           "name": "Google Sheets account"
         }
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 1000,
+      "executeOnce": true
     },
     {
       "parameters": {
@@ -1485,7 +1512,10 @@
           "id": "xvE2YldRdvKwWziR",
           "name": "Google Sheets account"
         }
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 1000
     },
     {
       "parameters": {
@@ -1844,7 +1874,11 @@
           "id": "xvE2YldRdvKwWziR",
           "name": "Google Sheets account"
         }
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 1000,
+      "alwaysOutputData": true
     },
     {
       "parameters": {
@@ -1935,7 +1969,11 @@
           "id": "xvE2YldRdvKwWziR",
           "name": "Google Sheets account"
         }
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 1000,
+      "executeOnce": true
     },
     {
       "parameters": {
@@ -2123,7 +2161,11 @@
           "id": "xvE2YldRdvKwWziR",
           "name": "Google Sheets account"
         }
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 1000,
+      "alwaysOutputData": true
     },
     {
       "parameters": {
@@ -2353,7 +2395,11 @@
           "id": "xvE2YldRdvKwWziR",
           "name": "Google Sheets account"
         }
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 1000,
+      "alwaysOutputData": true
     },
     {
       "parameters": {
@@ -2453,7 +2499,11 @@
           "id": "xvE2YldRdvKwWziR",
           "name": "Google Sheets account"
         }
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 1000,
+      "executeOnce": true
     },
     {
       "parameters": {
@@ -2494,11 +2544,15 @@
           "id": "xvE2YldRdvKwWziR",
           "name": "Google Sheets account"
         }
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 1000,
+      "executeOnce": true
     },
     {
       "parameters": {
-        "jsCode": "const prep = $('التحقق من طلب النقل').first().json;\nconst row = $input.first()?.json ?? {};\nconst found = String(row['مفتاح الفصل'] ?? '').trim();\nconst available = found ? String(row['متاح للنقل'] ?? 'نعم').trim() !== 'لا' : true;\n\nreturn [{\n  json: {\n    ...prep,\n    canContinue: available,\n    message: available ? '' : `الفصل ${prep.toClass} غير متاح لاستقبال طلبات النقل حاليًا. اختر فصلًا آخر.`\n  }\n}];"
+        "jsCode": "const prep = $('التحقق من طلب النقل').first().json;\nconst row = $input.first()?.json ?? {};\nconst found = String(row['مفتاح الفصل'] ?? '').trim();\nconst available = found ? String(row['متاح للنقل'] ?? 'نعم').trim() !== 'لا' : true;\nconst excluded = found ? String(row['مستبعد من الموازنة'] ?? 'لا').trim() === 'نعم' : false;\n\nconst canContinue = available && !excluded;\n\nreturn [{\n  json: {\n    ...prep,\n    canContinue: canContinue,\n    message: canContinue ? '' : 'الفصل ' + prep.toClass + ' غير متاح أو مكتمل الطاقة الاستيعابية حالياً. اختر فصلاً آخر به مقاعد شاغرة.'\n  }\n}];"
       },
       "id": "b2b6c798-2956-4227-b2e5-bd5a1b9e6e14",
       "name": "التحقق من إتاحة الفصل للنقل",
@@ -2639,7 +2693,11 @@
           "id": "xvE2YldRdvKwWziR",
           "name": "Google Sheets account"
         }
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 1000,
+      "executeOnce": true
     },
     {
       "parameters": {
@@ -2688,7 +2746,11 @@
           "id": "xvE2YldRdvKwWziR",
           "name": "Google Sheets account"
         }
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 1000,
+      "executeOnce": true
     },
     {
       "parameters": {
@@ -2912,7 +2974,11 @@
           "id": "xvE2YldRdvKwWziR",
           "name": "Google Sheets account"
         }
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 1000,
+      "alwaysOutputData": true
     },
     {
       "parameters": {
@@ -3051,17 +3117,6 @@
         [
           {
             "node": "هل العملية تقديم طلب؟",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "البحث عن الطالب - استعلام": {
-      "main": [
-        [
-          {
-            "node": "قراءة إعدادات الفصول - استعلام",
             "type": "main",
             "index": 0
           }
@@ -3813,6 +3868,17 @@
         [
           {
             "node": "إرجاع خطأ إعداد الفصل",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "البحث عن الطالب - استعلام": {
+      "main": [
+        [
+          {
+            "node": "قراءة إعدادات الفصول - استعلام",
             "type": "main",
             "index": 0
           }

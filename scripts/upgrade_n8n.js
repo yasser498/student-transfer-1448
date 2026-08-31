@@ -32,7 +32,7 @@ if (buildStudentNode) {
 const allStudents = $('قراءة طلاب المدرسة - استعلام').all().map(i => i.json || {});
 const settings = $('قراءة إعدادات الفصول - استعلام').all().map(i => i.json || {}).filter(r => String(r['مفتاح الفصل'] ?? '').trim());
 
-// 1. Check global portal lock
+// 1. Check global portal lock & auto capacity lock settings
 const portalLockRow = settings.find(r => String(r['مفتاح الفصل'] ?? '').trim() === 'PORTAL-STATUS');
 const isPortalLocked = portalLockRow ? String(portalLockRow['متاح للنقل'] ?? 'نعم').trim() === 'لا' : false;
 
@@ -45,6 +45,9 @@ if (isPortalLocked) {
     }
   }];
 }
+
+const autoCapRow = settings.find(r => String(r['مفتاح الفصل'] ?? '').trim() === 'SYSTEM-AUTO-CAP-LOCK' || String(r['مفتاح الفصل'] ?? '').trim() === 'AUTO-CAP-LOCK');
+const isAutoCapEnabled = autoCapRow ? String(autoCapRow['متاح للنقل'] ?? 'نعم').trim() !== 'لا' : true;
 
 // 2. Find the requested student
 const studentId = String(req.studentId ?? '').trim();
@@ -86,12 +89,11 @@ for (const r of settings) {
   };
 }
 
-// 5. Dynamic on-the-fly capacity filter:
-// A class is available ONLY IF:
-// - Not the student's current class
-// - Not manually disabled by admin (available !== false)
-// - Not excluded from balance (excluded !== true)
-// - Has vacant seats: current live count is STRICTLY LESS THAN the target capacity (count < target)
+// 5. Dynamic class filter:
+// - Always exclude the student's current class
+// - Exclude manually closed or excluded classes
+// - IF Auto Capacity Lock is ENABLED (isAutoCapEnabled): dynamically hide class if live count >= target!
+// - IF Auto Capacity Lock is DISABLED: show all available classes regardless of count!
 const availableClasses = Array.from({ length: maxMap[gradeCode] || 6 }, (_, i) => String(i + 1)).filter(c => {
   if (c === classNo) return false;
   const key = gradeCode + '-' + c;
@@ -99,11 +101,11 @@ const availableClasses = Array.from({ length: maxMap[gradeCode] || 6 }, (_, i) =
   if (s && s.excluded) return false;
   if (s && !s.available) return false;
 
-  const currentCount = classCounts[c] || 0;
-  const target = (s && s.target) ? s.target : 33;
-  
-  // Dynamic live capacity filter: if currentCount >= target, the class is automatically hidden on the fly!
-  if (currentCount >= target) return false;
+  if (isAutoCapEnabled) {
+    const currentCount = classCounts[c] || 0;
+    const target = (s && s.target) ? s.target : 33;
+    if (currentCount >= target) return false; // Full -> Hide
+  }
 
   return true;
 });

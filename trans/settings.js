@@ -13,21 +13,33 @@
   
   const lockSwitch = $("#portalLockSwitch");
   const statusBadge = $("#portalStatusBadge");
+  const autoCapSwitch = $("#autoCapLockSwitch");
+  const autoCapBadge = $("#autoCapBadge");
   let CURRENT_DASHBOARD = null;
 
   async function initPortalLockUI() {
     let isLocked = localStorage.getItem("transfer_portal_locked") === "true";
+    let isAutoCap = localStorage.getItem("transfer_auto_cap_lock") !== "false";
 
     try {
       const res = await fetch("/api/portal-status").then(r => r.json());
-      if (res && typeof res.locked === "boolean") {
-        isLocked = res.locked;
-        localStorage.setItem("transfer_portal_locked", isLocked ? "true" : "false");
+      if (res) {
+        if (typeof res.locked === "boolean") {
+          isLocked = res.locked;
+          localStorage.setItem("transfer_portal_locked", isLocked ? "true" : "false");
+        }
+        if (typeof res.autoCapLock === "boolean") {
+          isAutoCap = res.autoCapLock;
+          localStorage.setItem("transfer_auto_cap_lock", isAutoCap ? "true" : "false");
+        }
       }
     } catch (e) {}
 
     if (lockSwitch) lockSwitch.checked = isLocked;
     updateBadge(isLocked);
+
+    if (autoCapSwitch) autoCapSwitch.checked = isAutoCap;
+    updateAutoCapBadge(isAutoCap);
   }
 
   function updateBadge(isLocked) {
@@ -40,6 +52,58 @@
       statusBadge.className = "badge good";
     }
   }
+
+  function updateAutoCapBadge(isAuto) {
+    if (!autoCapBadge) return;
+    if (isAuto) {
+      autoCapBadge.textContent = "🔒 القفل التلقائي مفعّل (يُخفي الشعب المكتملة آلياً)";
+      autoCapBadge.className = "badge good";
+    } else {
+      autoCapBadge.textContent = "⚪ معطّل (تعتمد الإتاحة على الضبط اليدوي فقط)";
+      autoCapBadge.className = "badge neutral";
+    }
+  }
+
+  autoCapSwitch?.addEventListener("change", async () => {
+    const isAuto = autoCapSwitch.checked;
+    localStorage.setItem("transfer_auto_cap_lock", isAuto ? "true" : "false");
+    updateAutoCapBadge(isAuto);
+
+    A.alert($("#settingsMsg"), "جاري تحديث سياسة القفل التلقائي للطاقة الاستيعابية سحابياً...", "info");
+    autoCapSwitch.disabled = true;
+
+    try {
+      // 1. Update /api/portal-status
+      await fetch("/api/portal-status", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ autoCapLock: isAuto })
+      }).catch(() => {});
+
+      // 2. Save AUTO-CAP-LOCK state row in Google Sheets
+      await A.api({
+        action: "saveClassSettings",
+        gradeCode: "SYSTEM",
+        classNo: "AUTO-CAP-LOCK",
+        available: isAuto,
+        excluded: false,
+        targetCount: "0",
+        classNote: isAuto ? "القفل التلقائي الذكي مفعّل" : "القفل التلقائي معطّل",
+        staffName: S.staff
+      }).catch(() => {});
+
+      if (isAuto) {
+        A.alert($("#settingsMsg"), "تم تفعيل القفل الذكي التلقائي بنجاح! سيتم تلقائياً إخفاء أي فصل مكتمل الطاقة من خيارات الطلاب.", "success");
+      } else {
+        A.alert($("#settingsMsg"), "تم تعطيل القفل التلقائي. ستظهر كافة الفصول المتاحة للطلاب حتى لو اكتملت طاقتها الاستيعابية بناءً على الضبط اليدوي.", "info");
+      }
+      await health();
+    } catch (err) {
+      A.alert($("#settingsMsg"), "تم الحفظ: " + err.message, "info");
+    } finally {
+      autoCapSwitch.disabled = false;
+    }
+  });
 
   lockSwitch?.addEventListener("change", async () => {
     const isLocked = lockSwitch.checked;

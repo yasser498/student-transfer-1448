@@ -108,11 +108,19 @@
     });
   });
 
+  function normalizeId(v) {
+    if (!v) return "";
+    return String(v)
+      .trim()
+      .replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d))
+      .replace(/[\u200B-\u200D\uFEFF]/g, "");
+  }
+
   // Lookup Student
   async function lookup() {
-    const id = $("#studentId").value.trim();
+    const id = normalizeId($("#studentId").value);
     if (!id) {
-      show($("#lookupMsg"), "يرجى إدخال رقم الطالب / الهوية الوطنية.", "error");
+      show($("#lookupMsg"), "يرجى إدخال رقم الطالب / الهوية الوطنية / السجل المدني.", "error");
       return;
     }
     
@@ -126,12 +134,16 @@
         post({ action: "status", studentId: id }).catch(() => ({ requests: [] }))
       ]);
 
+      if (!lookupRes || !lookupRes.student || lookupRes.success === false) {
+        throw new Error(lookupRes?.message || "لم يتم العثور على بيانات الطالب في سجلات المدرسة. يرجى التأكد من صحة رقم الهوية.");
+      }
+
       current = lookupRes.student;
       const history = statusRes.requests || [];
       
-      $("#studentName").textContent = current.name;
-      $("#studentGrade").textContent = current.grade;
-      $("#studentClass").textContent = `الفصل ${current.class}`;
+      $("#studentName").textContent = current.name || "—";
+      $("#studentGrade").textContent = current.grade || "—";
+      $("#studentClass").textContent = `الفصل ${current.class || "—"}`;
 
       const activePending = history.find(r => r.status === "قيد المراجعة");
       const approvedReq = history.find(r => r.status === "مقبول");
@@ -337,9 +349,9 @@
 
   // Track Requests
   $("#trackBtn").addEventListener("click", async () => {
-    const id = $("#trackId").value.trim();
+    const id = normalizeId($("#trackId").value);
     if (!id) {
-      show($("#trackMsg"), "يرجى إدخال رقم الطالب / الهوية.", "error");
+      show($("#trackMsg"), "يرجى إدخال رقم الطالب / الهوية الوطنية / السجل.", "error");
       return;
     }
 

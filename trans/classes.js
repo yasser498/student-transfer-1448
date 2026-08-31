@@ -68,7 +68,16 @@
   function renderCards(g) {
     $("#classGrid").innerHTML = Object.values(g.classes)
       .sort((a, b) => Number(a.classNo) - Number(b.classNo))
-      .map(c => `
+      .map(c => {
+        const isFull = !c.excluded && Number(c.count) >= Number(c.target);
+        const vacancies = Math.max(0, Number(c.target) - Number(c.count));
+        const capStatusHtml = c.excluded 
+          ? '<span style="font-size:10px;padding:2px 8px;border-radius:999px;background:#fef3c7;color:#92400e;font-weight:800">مستبعد</span>' 
+          : isFull 
+            ? '<span style="font-size:10px;padding:2px 8px;border-radius:999px;background:#fee2e2;color:#b91c1c;font-weight:800">🔒 مكتمل الطاقة</span>' 
+            : `<span style="font-size:10px;padding:2px 8px;border-radius:999px;background:#d1fae5;color:#047857;font-weight:800">🟢 شواغر: ${vacancies}</span>`;
+
+        return `
         <article class="class-card ${!c.available ? "closed" : ""} ${c.excluded ? "excluded" : ""}" 
                  data-key="${c.key}" 
                  data-grade="${g.code}" 
@@ -80,6 +89,7 @@
             <div class="class-no">
               الشعبة
               <b>الفصل ${c.classNo}</b>
+              <div style="margin-top:4px">${capStatusHtml}</div>
             </div>
             <div class="count-box">
               <strong>${A.num(c.count)}</strong>
@@ -144,7 +154,8 @@
             </button>
           </div>
         </article>
-      `).join("");
+        `;
+      }).join("");
 
     all(".class-card").forEach(card => {
       card.querySelectorAll("input").forEach(x => x.addEventListener("input", () => changed(card)));
@@ -231,6 +242,46 @@
     } else {
       A.alert($("#pageMsg"), `تم حفظ ${ok} من أصل ${cards.length} فصل.`, "warning");
     }
+  });
+
+  // Auto-lock full classes and open classes with vacancies
+  $("#autoLockBtn")?.addEventListener("click", async () => {
+    if (!DATA || !DATA.classManagement) return;
+
+    const btn = $("#autoLockBtn");
+    btn.disabled = true;
+    A.alert($("#pageMsg"), "جاري فحص طاقة جميع الفصول وقفل الفصول المكتملة وفتح الشواغر في Google Sheets...", "info");
+
+    const s = A.session();
+    let lockedCount = 0;
+    let openCount = 0;
+
+    for (const [gradeName, g] of Object.entries(DATA.classManagement)) {
+      for (const c of Object.values(g.classes)) {
+        if (c.excluded) continue;
+        const isFull = Number(c.count) >= Number(c.target);
+        const shouldBeAvailable = !isFull;
+        
+        try {
+          await A.api({
+            action: "saveClassSettings",
+            gradeCode: g.code,
+            classNo: c.classNo,
+            available: shouldBeAvailable,
+            excluded: c.excluded,
+            targetCount: String(c.target),
+            classNote: isFull ? "مكتمل الطاقة الاستيعابية" : (c.note || ""),
+            staffName: s.staff
+          });
+          if (isFull) lockedCount++;
+          else openCount++;
+        } catch (e) {}
+      }
+    }
+
+    btn.disabled = false;
+    A.alert($("#pageMsg"), `تم بنجاح تطبيق القفل الذكي: تم قفل ${lockedCount} فصول مكتملة الطاقة وإتاحة ${openCount} فصول بها شواغر للطلاب! 🔒✓`, "success");
+    await load();
   });
 
   // Save ALL 18 Classes for the Whole School to Google Sheets in one click!

@@ -94,7 +94,12 @@
     return String(str)
       .trim()
       .replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d))
+      .replace(/[\u200B-\u200D\uFEFF]/g, "")
       .replace(/\s+/g, " ");
+  }
+
+  function stripId(str) {
+    return norm(str).replace(/[^a-zA-Z0-9]/g, "");
   }
 
   function resolveGrade(raw) {
@@ -169,10 +174,13 @@
 
     SYSTEM_REQUESTS.forEach(req => {
       const id = norm(req.studentId);
+      const sid = stripId(req.studentId);
       if (req.status === "مقبول") {
         approvedMap.set(id, req);
+        if (sid) approvedMap.set(sid, req);
       } else if (req.status === "قيد المراجعة") {
         pendingMap.set(id, req);
+        if (sid) pendingMap.set(sid, req);
       }
     });
 
@@ -185,8 +193,9 @@
     let conflictCount = 0;
 
     uploadedMap.forEach((up, id) => {
-      const approvedReq = approvedMap.get(id);
-      const pendingReq = pendingMap.get(id);
+      const sid = stripId(id);
+      const approvedReq = approvedMap.get(id) || (sid ? approvedMap.get(sid) : null);
+      const pendingReq = pendingMap.get(id) || (sid ? pendingMap.get(sid) : null);
 
       let status = "unchanged";
       let systemApprovedClass = approvedReq ? norm(approvedReq.toClass) : up.noorClass;
