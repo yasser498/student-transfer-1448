@@ -284,21 +284,26 @@
 
     DIFF_RESULTS = diffs;
 
-    // Update KPI counters
-    $("#kpiTotal").textContent = A.num(uploadedMap.size);
-    $("#kpiNoorPending").textContent = A.num(noorPendingCount);
-    $("#kpiNoorApplied").textContent = A.num(noorAppliedCount);
-    $("#kpiNoorExternal").textContent = A.num(noorExternalCount);
-    $("#kpiMissing").textContent = A.num(missingCount);
+    // Update KPI counters safely
+    const safeText = (id, val) => {
+      const el = $(id);
+      if (el) el.textContent = val;
+    };
 
-    $("#countAll").textContent = diffs.length;
-    $("#countNoorPending").textContent = noorPendingCount;
-    $("#countNoorApplied").textContent = noorAppliedCount;
-    $("#countNoorExternal").textContent = noorExternalCount;
-    $("#countNew").textContent = newCount;
-    $("#countConflicts").textContent = conflictCount;
-    $("#countMissing").textContent = missingCount;
-    $("#countUnchanged").textContent = unchangedCount;
+    safeText("#kpiTotal", A.num(uploadedMap.size));
+    safeText("#kpiNoorPending", A.num(noorPendingCount));
+    safeText("#kpiNoorApplied", A.num(noorAppliedCount));
+    safeText("#kpiNoorExternal", A.num(noorExternalCount));
+    safeText("#kpiMissing", A.num(missingCount));
+
+    safeText("#countAll", diffs.length);
+    safeText("#countNoorPending", noorPendingCount);
+    safeText("#countNoorApplied", noorAppliedCount);
+    safeText("#countNoorExternal", noorExternalCount);
+    safeText("#countNew", newCount);
+    safeText("#countConflicts", conflictCount);
+    safeText("#countMissing", missingCount);
+    safeText("#countUnchanged", unchangedCount);
 
     diffDashboard.classList.remove("hidden");
     
