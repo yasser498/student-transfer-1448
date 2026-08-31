@@ -69,7 +69,9 @@
     localStorage.setItem("transfer_auto_cap_lock", isAuto ? "true" : "false");
     updateAutoCapBadge(isAuto);
 
-    A.alert($("#settingsMsg"), "جاري تحديث سياسة القفل التلقائي للطاقة الاستيعابية سحابياً...", "info");
+    A.alert($("#settingsMsg"), "جاري تحديث سياسة القفل التلقائي للطاقة الاستيعابية في Google Sheets سحابياً...", "info");
+    autoCapSwitch.disabled = true;
+
     try {
       await fetch("/api/portal-status", {
         method: "POST",
@@ -78,12 +80,34 @@
       }).catch(() => {});
 
       if (isAuto) {
-        A.alert($("#settingsMsg"), "تم تفعيل القفل الذكي التلقائي بنجاح! سيتم تلقائياً إخفاء أي فصل يصل إلى طاقته الاستيعابية من خيارات الطلاب.", "success");
+        const d = await A.api({ action: "dashboard" }).catch(() => null);
+        if (d && d.classManagement) {
+          for (const [gradeName, g] of Object.entries(d.classManagement)) {
+            for (const c of Object.values(g.classes)) {
+              if (c.excluded) continue;
+              const isFull = Number(c.count) >= Number(c.target);
+              await A.api({
+                action: "saveClassSettings",
+                gradeCode: g.code,
+                classNo: c.classNo,
+                available: !isFull,
+                excluded: c.excluded,
+                targetCount: String(c.target),
+                classNote: isFull ? "مكتمل الطاقة الاستيعابية" : (c.note || ""),
+                staffName: S.staff
+              }).catch(() => {});
+            }
+          }
+        }
+        A.alert($("#settingsMsg"), "تم تفعيل ومزامنة القفل الذكي بنجاح! تم إغلاق الفصول المكتملة في Google Sheets وإخفاؤها من بوابة الطلاب.", "success");
       } else {
         A.alert($("#settingsMsg"), "تم تعطيل القفل التلقائي. ستعتمد إتاحة الفصول في البوابة على التبديل اليدوي لكل فصل.", "info");
       }
+      await health();
     } catch (err) {
-      A.alert($("#settingsMsg"), "تم الحفظ محلياً: " + err.message, "info");
+      A.alert($("#settingsMsg"), "تم الحفظ: " + err.message, "info");
+    } finally {
+      autoCapSwitch.disabled = false;
     }
   });
 

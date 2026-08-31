@@ -244,6 +244,46 @@
     }
   });
 
+  // Auto-lock full classes and open classes with vacancies
+  $("#autoLockBtn")?.addEventListener("click", async () => {
+    if (!DATA || !DATA.classManagement) return;
+
+    const btn = $("#autoLockBtn");
+    btn.disabled = true;
+    A.alert($("#pageMsg"), "جاري فحص طاقة جميع الفصول وقفل الفصول المكتملة وفتح الشواغر في Google Sheets...", "info");
+
+    const s = A.session();
+    let lockedCount = 0;
+    let openCount = 0;
+
+    for (const [gradeName, g] of Object.entries(DATA.classManagement)) {
+      for (const c of Object.values(g.classes)) {
+        if (c.excluded) continue;
+        const isFull = Number(c.count) >= Number(c.target);
+        const shouldBeAvailable = !isFull;
+        
+        try {
+          await A.api({
+            action: "saveClassSettings",
+            gradeCode: g.code,
+            classNo: c.classNo,
+            available: shouldBeAvailable,
+            excluded: c.excluded,
+            targetCount: String(c.target),
+            classNote: isFull ? "مكتمل الطاقة الاستيعابية" : (c.note || ""),
+            staffName: s.staff
+          });
+          if (isFull) lockedCount++;
+          else openCount++;
+        } catch (e) {}
+      }
+    }
+
+    btn.disabled = false;
+    A.alert($("#pageMsg"), `تم بنجاح تطبيق القفل الذكي: تم قفل ${lockedCount} فصول مكتملة الطاقة وإتاحة ${openCount} فصول بها شواغر للطلاب! 🔒✓`, "success");
+    await load();
+  });
+
   // Save ALL 18 Classes for the Whole School to Google Sheets in one click!
   $("#saveSchoolAllBtn").addEventListener("click", async () => {
     if (!DATA || !DATA.classManagement) return;
