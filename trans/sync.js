@@ -49,7 +49,6 @@
   function setupEventListeners() {
     $("#reloadSystemBtn")?.addEventListener("click", loadSystemData);
     $("#templateBtn")?.addEventListener("click", downloadSampleTemplate);
-    $("#applyNoorSyncBtn")?.addEventListener("click", applyMasterSync);
     $("#exportNoorActionBtn")?.addEventListener("click", exportNoorActionList);
     $("#exportNoorPendingBtn")?.addEventListener("click", exportPendingInNoor);
     $("#exportDiffBtn")?.addEventListener("click", exportDiffReport);
@@ -476,45 +475,6 @@
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "الورقة1");
     XLSX.writeFile(wb, `كشف_الطلاب_المحدث_المعتمد_1448.xlsx`);
-  }
-
-  // 5. Apply Master Noor Sync & Update Database
-  function applyMasterSync() {
-    if (!DIFF_RESULTS.length) {
-      alert("يرجى رفع كشف إكسل نظام نور أولاً للمزامنة والتعميم.");
-      return;
-    }
-
-    // Filter only active students currently in Noor (excluding missing/departed)
-    const activeStudents = DIFF_RESULTS.filter(r => r.status !== "missing");
-    const newStudents = DIFF_RESULTS.filter(r => r.status === "new");
-    const movedStudents = DIFF_RESULTS.filter(r => r.status === "noor-external" || r.status === "noor-applied");
-
-    const msg = 
-      `📋 ملخص تعميم كشف نور على قاعدة بيانات النظام:\n\n` +
-      `• إجمالي الطلاب المعتمدين بالكشف: ${activeStudents.length} طالب\n` +
-      `• الطلاب المستجدين (المضافين حديثاً): ${newStudents.length} طالب\n` +
-      `• الطلاب الذين تم تحديث فصولهم: ${movedStudents.length} طالب\n\n` +
-      `سيقوم النظام بتوليد ملف (طلاب1448_محدث_نور.xlsx) الجاهز لتعميمه في Google Sheets ليصبح النظام مطابقاً لنظام نور 100% دون المساس بسجل الطلبات السابقة.\n\n` +
-      `هل تود المتابعة وتصدير الكشف المحدث الآن؟`;
-
-    if (!confirm(msg)) return;
-
-    // Build master rows
-    const masterRows = activeStudents.map(r => ({
-      "رقم الطالب": r.studentId,
-      "اسم الطالب": r.name,
-      "رقم الصف": r.gradeCode,
-      "الصف": r.gradeName,
-      "الفصل": r.noorClass
-    }));
-
-    const ws = XLSX.utils.json_to_sheet(masterRows);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "الورقة1");
-    XLSX.writeFile(wb, `طلاب1448_محدث_من_نور_${new Date().toISOString().slice(0, 10)}.xlsx`);
-
-    A.alert($("#pageMsg"), `🎉 تم بنجاح تجهيز وتصدير الكشف المحدث المعتمد (${activeStudents.length} طالب)! عند نسخه أو استيراده في شيت (طلاب1448 - الورقة1) ستتطابق أعداد الفصول 100% مع نظام نور.`, "success");
   }
 
   function downloadSampleTemplate() {

@@ -66,6 +66,28 @@
     `;
   }
 
+  // Detect mutual swap pairs (e.g. Student A: 1->4 and Student B: 4->1)
+  function detectMutualSwaps(requests) {
+    const swapMap = new Map();
+    const pendingList = requests.filter(r => r.status === "قيد المراجعة");
+
+    for (let i = 0; i < pendingList.length; i++) {
+      const a = pendingList[i];
+      for (let j = i + 1; j < pendingList.length; j++) {
+        const b = pendingList[j];
+        if (
+          a.grade === b.grade &&
+          a.fromClass === b.toClass &&
+          a.toClass === b.fromClass
+        ) {
+          swapMap.set(a.requestId, b);
+          swapMap.set(b.requestId, a);
+        }
+      }
+    }
+    return swapMap;
+  }
+
   function render() {
     if (!DATA) return;
     const s = DATA.summary || {};
@@ -176,238 +198,13 @@
   $("#statusFilter").addEventListener("change", renderRequests);
   $("#searchInput").addEventListener("input", renderRequests);
 
-  // ================= SMART MULTI-HOP BALANCING & CHAIN ENGINE =================
-  function findOptimalChains(requests, classManagement, selectedGrade) {
-    if (!requests || !classManagement) return { chains: [], studentChainMap: new Map() };
-
-    const pending = requests.filter(r => r.status === "قيد المراجعة");
-    const chains = [];
-    const studentChainMap = new Map();
-
-    // Group pending requests by grade
-    const gradesToProcess = (selectedGrade === "الكل") 
-      ? Object.keys(classManagement) 
-      : [selectedGrade].filter(g => classManagement[g]);
-
-    gradesToProcess.forEach(gradeName => {
-      const gData = classManagement[gradeName];
-      if (!gData || !gData.classes) return;
-
-      const gradePending = pending.filter(r => r.grade === gradeName || r.gradeCode === gData.code);
-      if (gradePending.length < 1) return;
-
-      const classes = gData.classes;
-
-      // Map from fromClass -> list of requests
-      const fromMap = {};
-      gradePending.forEach(r => {
-        const fc = String(r.fromClass);
-        if (!fromMap[fc]) fromMap[fc] = [];
-        fromMap[fc].push(r);
-      });
-
-      // 1. DISCOVER 2-WAY DIRECT SWAPS (A -> B and B -> A)
-      for (let i = 0; i < gradePending.length; i++) {
-        const req1 = gradePending[i];
-        for (let j = i + 1; j < gradePending.length; j++) {
-          const req2 = gradePending[j];
-          if (
-            String(req1.fromClass) === String(req2.toClass) &&
-            String(req1.toClass) === String(req2.fromClass)
-          ) {
-            const chain = {
-              id: `swap-${req1.requestId}-${req2.requestId}`,
-              type: "2way-swap",
-              typeTitle: "🔄 تبادل مقاعد ثنائي مباشر",
-              typeTagClass: "swap",
-              grade: gradeName,
-              requests: [req1, req2],
-              route: [req1.fromClass, req1.toClass, req1.fromClass],
-              routeText: `الفصل ${req1.fromClass} ⇄ الفصل ${req1.toClass}`,
-              impact: `تلبية رغبة الطالبين (${req1.name} و ${req2.name}) مع ثبات تام لأعداد الفصلين دون أي إخلال بالموازنة!`,
-              score: 20
-            };
-            chains.push(chain);
-            studentChainMap.set(req1.requestId, chain);
-            studentChainMap.set(req2.requestId, chain);
-          }
-        }
-      }
-
-      // 2. DISCOVER 3-WAY MULTI-HOP CHAINS & CYCLES (A -> B and B -> C)
-      for (const req1 of gradePending) {
-        const classA = String(req1.fromClass);
-        const classB = String(req1.toClass);
-
-        const possibleNext = fromMap[classB] || [];
-        for (const req2 of possibleNext) {
-          if (req2.requestId === req1.requestId) continue;
-          const classC = String(req2.toClass);
-
-          // Sub-case 2.1: Closed 3-Way Cycle (A -> B -> C -> A)
-          const possibleCycleClose = (fromMap[classC] || []).filter(r3 => String(r3.toClass) === classA && r3.requestId !== req1.requestId && r3.requestId !== req2.requestId);
-          for (const req3 of possibleCycleClose) {
-            const chainKey = [req1.requestId, req2.requestId, req3.requestId].sort().join("-");
-            if (!chains.some(c => c.key === chainKey)) {
-              const chain = {
-                id: `cycle3-${chainKey}`,
-                key: chainKey,
-                type: "3way-cycle",
-                typeTitle: "🔄 حلقة تبادل ثلاثية مغلقة",
-                typeTagClass: "golden",
-                grade: gradeName,
-                requests: [req1, req2, req3],
-                route: [classA, classB, classC, classA],
-                routeText: `الفصل ${classA} ➔ الفصل ${classB} ➔ الفصل ${classC} ➔ الفصل ${classA}`,
-                impact: `تلبية رغبات 3 طلاب بنجاح (${req1.name}، ${req2.name}، ${req3.name}) مع بقاء كافة الفصول الثلاثة متوازنة 100%!`,
-                score: 30
-              };
-              chains.push(chain);
-              studentChainMap.set(req1.requestId, chain);
-              studentChainMap.set(req2.requestId, chain);
-              studentChainMap.set(req3.requestId, chain);
-            }
-          }
-
-          // Sub-case 2.2: Open 3-Way Chain (A -> B -> C where A has surplus and C has deficit)
-          if (classC !== classA) {
-            const countA = Number(classes[classA]?.count || 0);
-            const targetA = Number(classes[classA]?.target || 0);
-            const countC = Number(classes[classC]?.count || 0);
-            const targetC = Number(classes[classC]?.target || 0);
-
-            const isSurplusA = countA >= targetA;
-            const isDeficitC = countC <= targetC;
-
-            if (isSurplusA || isDeficitC) {
-              const chainKey = `chain3-${req1.requestId}-${req2.requestId}`;
-              if (!chains.some(c => c.id === chainKey)) {
-                const chain = {
-                  id: chainKey,
-                  type: "3way-chain",
-                  typeTitle: "🌟 سلسلة موازنة ثلاثية ذهبية",
-                  typeTagClass: "golden",
-                  grade: gradeName,
-                  requests: [req1, req2],
-                  route: [classA, classB, classC],
-                  routeText: `الفصل ${classA} ➔ الفصل ${classB} ➔ الفصل ${classC}`,
-                  impact: `تخفيض فائض الفصل ${classA} (${countA} ➔ ${countA - 1}) وسد عجز الفصل ${classC} (${countC} ➔ ${countC + 1}) مع بقاء الفصل الوسيط ${classB} ثابتاً عند (${classes[classB]?.count || 0})!`,
-                  score: 25 + (isSurplusA && isDeficitC ? 15 : 0)
-                };
-                chains.push(chain);
-                if (!studentChainMap.has(req1.requestId)) studentChainMap.set(req1.requestId, chain);
-                if (!studentChainMap.has(req2.requestId)) studentChainMap.set(req2.requestId, chain);
-              }
-            }
-          }
-        }
-      }
-
-      // 3. DISCOVER DIRECT SURPLUS-TO-DEFICIT TRANSFERS
-      for (const req of gradePending) {
-        const fc = String(req.fromClass);
-        const tc = String(req.toClass);
-        const countFrom = Number(classes[fc]?.count || 0);
-        const targetFrom = Number(classes[fc]?.target || 0);
-        const countTo = Number(classes[tc]?.count || 0);
-        const targetTo = Number(classes[tc]?.target || 0);
-
-        if (countFrom > targetFrom && countTo < targetTo) {
-          const chainKey = `direct-${req.requestId}`;
-          if (!chains.some(c => c.id === chainKey)) {
-            const chain = {
-              id: chainKey,
-              type: "direct-golden",
-              typeTitle: "🎯 نقل مباشر مثالي (سد عجز وتصريف فائض)",
-              typeTagClass: "golden",
-              grade: gradeName,
-              requests: [req],
-              route: [fc, tc],
-              routeText: `الفصل ${fc} ➔ الفصل ${tc}`,
-              impact: `ينقل الطالب ${req.name} من الفصل الفائض (${fc}: ${countFrom} ➔ ${countFrom - 1}) إلى الفصل المحتاج (${tc}: ${countTo} ➔ ${countTo + 1}) مباشرة!`,
-              score: 20
-            };
-            chains.push(chain);
-            if (!studentChainMap.has(req.requestId)) studentChainMap.set(req.requestId, chain);
-          }
-        }
-      }
-    });
-
-    chains.sort((a, b) => b.score - a.score);
-    return { chains, studentChainMap };
-  }
-
   function renderRequests() {
     if (!DATA) return;
     const f = $("#statusFilter").value;
     const t = $("#searchInput").value.trim().toLowerCase();
 
-    // 1. Run Optimal Chain Discovery
-    const { chains, studentChainMap } = findOptimalChains(DATA.requests || [], DATA.classManagement || {}, GRADE);
-    
-    // Render Chain Suggestions Banner
-    const chainSection = $("#chainSuggestionsSection");
-    const chainList = $("#chainSuggestionsList");
-    const chainBadge = $("#chainStatsBadge");
+    const swapMap = detectMutualSwaps(DATA.requests || []);
 
-    if (chains.length > 0 && (f === "قيد المراجعة" || f === "الكل")) {
-      chainSection?.classList.remove("hidden");
-      if (chainBadge) {
-        chainBadge.textContent = `🎯 تم اكتشاف ${A.num(chains.length)} حزم وسلاسل تبادلية ذكية`;
-      }
-      if (chainList) {
-        chainList.innerHTML = chains.map((ch, idx) => `
-          <article class="chain-card">
-            <div>
-              <div class="chain-card-head">
-                <span class="chain-type-tag ${ch.typeTagClass}">${ch.typeTitle}</span>
-                <small style="color:var(--text-muted);font-weight:700">${A.esc(ch.grade)}</small>
-              </div>
-
-              <div class="chain-route">
-                ${ch.route.map((node, i) => `
-                  <span class="node">الفصل ${node}</span>
-                  ${i < ch.route.length - 1 ? `<span class="arrow">➔</span>` : ""}
-                `).join("")}
-              </div>
-
-              <div class="chain-students-list">
-                ${ch.requests.map(r => `
-                  <div class="chain-student-row">
-                    <span class="chain-student-name">👤 ${A.esc(r.name)}</span>
-                    <span class="chain-student-move">من ${A.esc(r.fromClass)} ← إلى ${A.esc(r.toClass)}</span>
-                  </div>
-                `).join("")}
-              </div>
-
-              <div class="chain-impact-box">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                <span>${ch.impact}</span>
-              </div>
-            </div>
-
-            <div class="chain-actions">
-              <button class="btn btn-primary approve-chain-btn" style="width:100%;font-size:12px;padding:8px 12px" data-chain-idx="${idx}">
-                ⚡ اعتماد هذه السلسلة معاً (${A.num(ch.requests.length)} طلاب)
-              </button>
-            </div>
-          </article>
-        `).join("");
-
-        all(".approve-chain-btn").forEach(b => {
-          b.addEventListener("click", () => {
-            const idx = Number(b.dataset.chainIdx);
-            const chain = chains[idx];
-            if (chain) decideChain(chain);
-          });
-        });
-      }
-    } else {
-      chainSection?.classList.add("hidden");
-    }
-
-    // 2. Filter Table Rows
     const rows = (DATA.requests || []).filter(r => {
       const matchGrade = (GRADE === "الكل" || r.grade === GRADE || (DATA.classManagement?.[GRADE] && r.gradeCode === DATA.classManagement[GRADE].code));
       const matchStatus = (f === "الكل" || r.status === f);
@@ -421,9 +218,9 @@
     }
 
     $("#requestsBody").innerHTML = rows.map(r => {
-      const chain = studentChainMap.get(r.requestId);
+      const mutualPartner = swapMap.get(r.requestId);
       return `
-        <tr style="${chain ? "background:#f0f9ff" : ""}">
+        <tr style="${mutualPartner ? "background:#fdfaf2" : ""}">
           <td>
             <b style="font-family:monospace">${A.esc(r.requestId)}</b>
             <div style="font-size:11px;color:var(--text-muted);margin-top:2px">${A.esc(r.date)}</div>
@@ -438,21 +235,20 @@
             <span style="color:var(--primary);margin:0 4px">←</span>
             <span style="font-weight:800;color:var(--primary)">الفصل ${A.esc(r.toClass)}</span>
             
-            ${chain ? `
-              <div class="chain-badge" style="display:block;margin-top:4px">
-                🔗 ${chain.typeTitle}
-                <small style="display:block;color:#0369a1;font-weight:700">مع: ${chain.requests.filter(x=>x.requestId!==r.requestId).map(x=>x.name).join(" + ") || "حركة موازنة"}</small>
+            ${mutualPartner ? `
+              <div style="display:inline-flex;align-items:center;gap:4px;background:#fef3c7;color:#92400e;padding:3px 8px;border-radius:999px;font-size:10px;font-weight:800;margin-top:4px;border:1px solid #fde68a">
+                🔄 تبادل مقاعد مباشر مع: ${A.esc(mutualPartner.name)}
               </div>
             ` : ""}
 
-            ${!chain && r.suggestedClass && r.suggestedClass !== r.toClass ? `
+            ${!mutualPartner && r.suggestedClass && r.suggestedClass !== r.toClass ? `
               <div style="font-size:10px;color:#d97706;margin-top:2px">المقترح للموازنة: الفصل ${A.esc(r.suggestedClass)}</div>
             ` : ""}
           </td>
           <td><small>${A.esc(r.reason)}</small></td>
           <td>
-            <span class="badge ${chain ? "good" : A.balanceClass(r.balanceLabel)}">
-              ${chain ? "🌟 يحقق توازن السلسلة" : A.esc(r.balanceLabel)}
+            <span class="badge ${mutualPartner ? "good" : A.balanceClass(r.balanceLabel)}">
+              ${mutualPartner ? "متوازن (تبادل مباشر)" : A.esc(r.balanceLabel)}
             </span>
           </td>
           <td><span class="badge ${A.statusClass(r.status)}">${A.esc(r.status)}</span></td>
@@ -480,24 +276,19 @@
     const r = DATA.requests.find(x => x.requestId === id);
     if (!r) return;
 
-    const { studentChainMap } = findOptimalChains(DATA.requests || [], DATA.classManagement || {}, GRADE);
-    const chain = studentChainMap.get(id);
+    const swapMap = detectMutualSwaps(DATA.requests || []);
+    const partner = swapMap.get(id);
 
     $("#decisionTitle").textContent = decision === "approve" ? "اعتماد طلب النقل وتحديث الفصل" : "رفض طلب النقل";
     
-    let chainNotice = "";
-    if (chain && decision === "approve") {
+    let swapNotice = "";
+    if (partner && decision === "approve") {
       $("#approvePairBtn")?.classList.remove("hidden");
-      $("#approvePairBtn").textContent = `⚡ اعتماد السلسلة كاملة (${chain.requests.length} طلاب معاً)`;
-      chainNotice = `
-        <div style="margin-top:12px;padding:12px;background:#f0f9ff;border:1.5px solid #bae6fd;border-radius:12px;color:#0369a1;font-size:12px">
-          <div style="font-weight:800;display:flex;align-items:center;gap:4px;margin-bottom:4px">
-            <span>⚡ ${chain.typeTitle} (${chain.routeText}):</span>
-          </div>
-          <div>${chain.impact}</div>
-          <div style="margin-top:6px;font-weight:700;color:#0c4a6e">
-            الطلاب في هذه السلسلة: ${chain.requests.map(x => `<b>${A.esc(x.name)}</b> (${x.fromClass} ➔ ${x.toClass})`).join(" · ")}
-          </div>
+      $("#approvePairBtn").textContent = `🔄 اعتماد التبادل مع ${partner.name} معاً`;
+      swapNotice = `
+        <div style="margin-top:12px;padding:12px;background:#fef3c7;border:1.5px solid #fde68a;border-radius:12px;color:#92400e;font-size:12px;font-weight:700">
+          🔄 تنبيه التبادل المباشر: هذا الطالب لديه طلب تبادلي متطابق مع الطالب <b>${A.esc(partner.name)}</b> (من ${partner.fromClass} إلى ${partner.toClass}).
+          يمكنك الضغط على زر «اعتماد التبادل للطالبين معاً» ليقوم النظام بتحديث فصلي الطالبين معاً في Google Sheets فوراً والحفاظ على توازن الشعب 100%!
         </div>
       `;
     } else {
@@ -521,7 +312,7 @@
       <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:14px;padding:14px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
           <strong style="font-size:15px;color:var(--navy-950)">${A.esc(r.name)}</strong>
-          <span class="badge ${chain ? "good" : A.balanceClass(r.balanceLabel)}">${chain ? "🌟 سلسلة موازنة" : A.esc(r.balanceLabel)}</span>
+          <span class="badge ${partner ? "good" : A.balanceClass(r.balanceLabel)}">${partner ? "متوازن (تبادل مباشر)" : A.esc(r.balanceLabel)}</span>
         </div>
         <div style="font-size:13px;color:var(--text-muted)">
           الصف: <b>${A.esc(r.grade)}</b> · من الفصل <b>${A.esc(r.fromClass)}</b> إلى الفصل <b style="color:var(--primary)">${A.esc(r.toClass)}</b>
@@ -532,7 +323,7 @@
 
         <div style="background:#f0fdf4;border:1.5px solid #a7f3d0;border-radius:12px;padding:12px 14px;margin-top:12px">
           <div style="font-size:12px;font-weight:900;color:#065f46;margin-bottom:8px">
-            📊 أثر الاعتماد اللحظي على أعداد الفصول:
+            📊 أثر الاعتماد اللحظي على أعداد الفصول (وفق أحدث البيانات):
           </div>
           <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center">
             <div style="background:#ffffff;border:1px solid #cbd5e1;border-radius:8px;padding:8px 10px;text-align:center">
@@ -553,7 +344,7 @@
           </div>
         </div>
 
-        ${chainNotice}
+        ${swapNotice}
       </div>
     `;
     $("#decisionNote").value = "";
@@ -564,19 +355,12 @@
   $("#cancelDecision").addEventListener("click", () => $("#decisionModal").classList.add("hidden"));
   $("#approveDecision").addEventListener("click", () => decide("approve"));
   $("#rejectDecision").addEventListener("click", () => decide("reject"));
-  $("#approvePairBtn")?.addEventListener("click", () => {
-    if (!selected) return;
-    const { studentChainMap } = findOptimalChains(DATA.requests || [], DATA.classManagement || {}, GRADE);
-    const chain = studentChainMap.get(selected.id);
-    if (chain) decideChain(chain);
-    else decide("approve");
-  });
+  $("#approvePairBtn")?.addEventListener("click", () => decidePaired());
 
   async function decide(decision) {
     if (!selected) return;
     
-    $("#approveDecision").disabled = $("#rejectDecision").disabled = true;
-    if ($("#approvePairBtn")) $("#approvePairBtn").disabled = true;
+    $("#approveDecision").disabled = $("#rejectDecision").disabled = $("#approvePairBtn").disabled = true;
     A.alert($("#decisionMsg"), "جاري تسجيل القرار في السجلات وتحديث الفصل...", "info");
     
     try {
@@ -593,49 +377,49 @@
     } catch (e) {
       A.alert($("#decisionMsg"), e.message, "error");
     } finally {
-      $("#approveDecision").disabled = $("#rejectDecision").disabled = false;
-      if ($("#approvePairBtn")) $("#approvePairBtn").disabled = false;
+      $("#approveDecision").disabled = $("#rejectDecision").disabled = $("#approvePairBtn").disabled = false;
     }
   }
 
-  async function decideChain(chain) {
-    if (!chain || !chain.requests || !chain.requests.length) return;
+  async function decidePaired() {
+    if (!selected) return;
+    const swapMap = detectMutualSwaps(DATA.requests || []);
+    const partner = swapMap.get(selected.id);
+    if (!partner) return decide("approve");
 
-    const names = chain.requests.map(r => r.name).join(" و ");
-    const confirmMsg = `هل أنت متأكد من اعتماد السلسلة التبادلية (${chain.routeText}) لـ (${chain.requests.length}) طلاب (${names}) معاً؟`;
-    
-    if (!confirm(confirmMsg)) return;
+    $("#approveDecision").disabled = $("#rejectDecision").disabled = $("#approvePairBtn").disabled = true;
+    A.alert($("#decisionMsg"), "جاري اعتماد ونقل الطالبين معاً وتحديث فصولهما...", "info");
 
-    A.alert($("#pageMsg"), `جاري اعتماد السلسلة التبادلية ونقل ${chain.requests.length} طلاب وتحديث فصولهم في Google Sheets...`, "info");
+    try {
+      const s = A.session();
+      const userNote = $("#decisionNote").value.trim();
+      
+      // Step 1: Approve Student A
+      await A.api({
+        action: "decision",
+        requestId: selected.id,
+        decision: "approve",
+        note: userNote || "اعتماد بالتبادل المباشر",
+        staffName: s.staff
+      });
 
-    const s = A.session();
-    let successCount = 0;
-    const userNote = $("#decisionNote")?.value?.trim() || "";
+      // Step 2: Approve Student B (Paired partner)
+      await A.api({
+        action: "decision",
+        requestId: partner.requestId,
+        decision: "approve",
+        note: userNote || "اعتماد بالتبادل المباشر",
+        staffName: s.staff
+      });
 
-    for (const req of chain.requests) {
-      try {
-        await A.api({
-          action: "decision",
-          requestId: req.requestId,
-          decision: "approve",
-          note: userNote || `معتمد ضمن ${chain.typeTitle}: ${chain.routeText}`,
-          staffName: s.staff
-        });
-        successCount++;
-      } catch (err) {
-        console.error("Error approving student in chain:", req.requestId, err);
-      }
+      $("#decisionModal").classList.add("hidden");
+      A.alert($("#pageMsg"), `تم بنجاح اعتماد التبادل للطالبين (${selected.id} و ${partner.requestId}) وتحديث فصليهما معاً دون أي اختلال في الموازنة!`, "success");
+      await load();
+    } catch (e) {
+      A.alert($("#decisionMsg"), "خطأ أثناء الاعتماد المزدوج: " + e.message, "error");
+    } finally {
+      $("#approveDecision").disabled = $("#rejectDecision").disabled = $("#approvePairBtn").disabled = false;
     }
-
-    $("#decisionModal")?.classList.add("hidden");
-
-    if (successCount === chain.requests.length) {
-      A.alert($("#pageMsg"), `🎉 تم بنجاح اعتماد السلسلة التبادلية بالكامل لجميع الطلاب الـ ${successCount} وتحديث فصولهم وتحقيق التوازن المثالي للشعب! 🌟`, "success");
-    } else {
-      A.alert($("#pageMsg"), `تم اعتماد ${successCount} من أصل ${chain.requests.length} طلاب في السلسلة.`, "warning");
-    }
-
-    await load();
   }
 
 })();
