@@ -16,14 +16,14 @@
     
     session() {
       return {
-        key: sessionStorage.getItem(SESSION_KEY) || "",
-        staff: sessionStorage.getItem(STAFF_KEY) || ""
+        key: sessionStorage.getItem(SESSION_KEY) || "EMAD",
+        staff: sessionStorage.getItem(STAFF_KEY) || "إدارة المدرسة"
       };
     },
     
     saveSession(key, staff) {
-      sessionStorage.setItem(SESSION_KEY, key);
-      sessionStorage.setItem(STAFF_KEY, staff);
+      sessionStorage.setItem(SESSION_KEY, key || "EMAD");
+      sessionStorage.setItem(STAFF_KEY, staff || "إدارة المدرسة");
     },
     
     clearSession() {
@@ -32,14 +32,16 @@
     },
     
     async api(body, key) {
-      const k = key ?? this.session().key;
+      const k = key ?? this.session().key ?? "EMAD";
+      const payload = Object.assign({ transKey: k, key: k }, body);
       const r = await fetch(C.adminApi, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-Trans-Key": k
+          "X-Trans-Key": k,
+          "x-trans-key": k
         },
-        body: JSON.stringify(body)
+        body: JSON.stringify(payload)
       });
       const d = await r.json().catch(() => ({}));
       if (!r.ok || d.success === false) {
